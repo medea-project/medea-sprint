@@ -17,14 +17,57 @@
    * Cluster Label Renderer
    */
   sigma.canvas.nodes.clusterLabel = function(node, context, settings) {
-    var prefix = settings('prefix') || '';
+    var prefix = settings('prefix') || '',
+        fontSize,
+        size = node[prefix + 'size'];;
 
-    context.fillText(
-      node.label,
-      Math.round(node[prefix + 'x'] + size + 3),
-      Math.round(node[prefix + 'y'] + fontSize / 3)
-    );
+    fontSize = (settings('labelSize') === 'fixed') ?
+      settings('defaultLabelSize') :
+      settings('labelSizeRatio') * size;
+
+    context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
+      fontSize + 'px ' + settings('font');
+    context.fillStyle = (settings('labelColor') === 'node') ?
+      (node.color || settings('defaultNodeColor')) :
+      settings('defaultLabelColor');
+
+    // Split lines and center
+    function measure(string) {
+      return context.measureText(string).width;
+    }
+
+    var lines = node.label.split('\\n'),
+        longest = Math.max.apply(null, lines.map(measure));
+
+    lines.forEach(function(string, i) {
+      var width = measure(string);
+
+      context.fillText(
+        string,
+        Math.round(node[prefix + 'x']) + (width !== longest ? (longest - width) / 2 : 0) - longest / 2,
+        Math.round(node[prefix + 'y']) + (i * fontSize)
+      );
+    });
+
+    // DEBUG
+    // context.fillStyle = node.color || settings('defaultNodeColor');
+    // context.beginPath();
+    // context.arc(
+    //   node[prefix + 'x'],
+    //   node[prefix + 'y'],
+    //   node[prefix + 'size'],
+    //   0,
+    //   Math.PI * 2,
+    //   true
+    // );
+
+    context.closePath();
+    context.fill();
   };
+
+  sigma.canvas.hovers.clusterLabel = Function.prototype;
+  sigma.canvas.labels.clusterLabel = Function.prototype;
+
 
   /**
    * Helpers
@@ -48,12 +91,17 @@
     var self = this;
 
     // Properties
-    this.sig = new sigma();
+    this.sig = new sigma({
+      settings: {
+        singleHover: true
+      }
+    });
     this.camera = this.sig.addCamera('main');
     this.renderer = this.sig.addRenderer({
       name: 'main',
       container: container,
-      camera: this.camera
+      camera: this.camera,
+      type: 'canvas'
     });
   }
 
@@ -67,7 +115,19 @@
 
     // Loading graph at init
     sigma.parsers.gexf(path, this.sig, function() {
+
+      // Giving precise node types
+      self.sig.graph.nodes().forEach(function(node) {
+        if (node.attributes.type === 'normal')
+          return;
+
+        node.type = 'clusterLabel';
+        node.size = 1;
+      });
+
+      // Refreshing view
       self.sig.refresh();
+
       callback();
     });
   };

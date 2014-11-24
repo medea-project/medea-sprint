@@ -28,6 +28,9 @@
       <attribute id="y" title="y" type="float"></attribute>
       <attribute id="x" title="x" type="float"></attribute>
       <attribute id="ClusterName" title="ClusterName" type="string"></attribute>
+      <attribute id="type" title="Type" type="string">
+        <default>normal</default>
+      </attribute>
     </attributes>
     <attributes class="edge" mode="static">
       <attribute id="0" title="level_edge" type="string"></attribute>
@@ -2657,6 +2660,14 @@
         <viz:size value="44.705883"></viz:size>
         <viz:position x="2752.5154" y="-186.87747" z="0.0"></viz:position>
         <viz:color r="233" g="129" b="26"></viz:color>
+      </node>
+      <node id="label1" label="This is a\nmotherfucking label">
+        <attvalues>
+          <attvalue for="type" value="clusterLabel"></attvalue>
+        </attvalues>
+        <viz:size value="30.588236"></viz:size>
+        <viz:position x="1000" y="300" z="0.0"></viz:position>
+        <viz:color r="26" g="26" b="233"></viz:color>
       </node>
       <node id="148" label="dangerous anthropogenic interference">
         <attvalues>
