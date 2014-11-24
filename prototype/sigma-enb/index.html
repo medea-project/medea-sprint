@@ -1,0 +1,22 @@
+<script src="lib/sigma.min.js"></script>
+<script src="lib/sigma.parsers.gexf.min.js"></script>
+<script src="enb.js"></script>
+<div id="container">
+  <style>
+    #graph-container {
+      top: 0;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      position: absolute;
+    }
+  </style>
+  <div id="graph-container"></div>
+</div>
+<script>
+  var enb = new ENBGraph(document.querySelector('#graph-container'));
+
+  enb.load('data/ENB.gexf', function() {
+    console.log('Done');
+  });
+</script>
