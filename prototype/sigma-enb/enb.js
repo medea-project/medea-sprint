@@ -1,4 +1,5 @@
 ;(function(undefined) {
+  'use strict';
 
   /**
    * ENB Sigma Viz Bindings
@@ -12,17 +13,42 @@
   if (!('sigma' in this))
     throw Error('ENBGraph: sigma is not in scope.');
 
-  // Abstract
+  /**
+   * Helpers
+   */
+  function first(a, fn, scope) {
+    for (var i = 0, l = a.length; i < l; i++) {
+      if (fn.call(scope || null, a[i]))
+        return a[i];
+    }
+    return;
+  }
+
+  function fuzzyLabel(label) {
+    return label.trim().toLowerCase();
+  }
+
+  /**
+   * Abstract
+   */
   function Abstract(container) {
     var self = this;
 
     // Properties
-    this.sig = new sigma({
-      container: container
+    this.sig = new sigma();
+    this.camera = this.sig.addCamera('main');
+    this.renderer = this.sig.addRenderer({
+      name: 'main',
+      container: container,
+      camera: this.camera
     });
   }
 
-  // Prototype
+  /**
+   * Prototype
+   */
+
+  // Loading the graph
   Abstract.prototype.load = function(path, callback) {
     var self = this;
 
@@ -31,6 +57,28 @@
       self.sig.refresh();
       callback();
     });
+  };
+
+  // Finding a node by label
+  Abstract.prototype.findNodeByLabel = function(label) {
+    return first(this.sig.graph.nodes(), function(node) {
+      return fuzzyLabel(node.label) === fuzzyLabel(label);
+    });
+  };
+
+  // Focusing on a precise node
+  Abstract.prototype.focusOnNodeByLabel = function(label) {
+    var node = this.findNodeByLabel(label);
+    console.log(node);
+    sigma.misc.animation.camera(
+      this.camera,
+      {
+        x: node['read_cammain:x'],
+        y: node['read_cammain:y'],
+        ratio: 0.1
+      },
+      {duration: 150}
+    );
   };
 
   // Exporting
