@@ -80,6 +80,12 @@
     return;
   }
 
+  function collect(prop) {
+    return function(o) {
+      return o[prop];
+    };
+  };
+
   function fuzzyLabel(label) {
     return label.trim().toLowerCase();
   }
@@ -91,6 +97,7 @@
     var self = this;
 
     // Properties
+    this.size = 0;
     this.sig = new sigma({
       settings: {
         singleHover: true
@@ -98,7 +105,7 @@
     });
     this.camera = this.sig.addCamera('main');
     this.renderer = this.sig.addRenderer({
-      name: 'main',
+      id: 'main',
       container: container,
       camera: this.camera,
       type: 'canvas'
@@ -115,9 +122,10 @@
 
     // Loading graph at init
     sigma.parsers.gexf(path, this.sig, function() {
+      var nodes = self.sig.graph.nodes();
 
       // Giving precise node types
-      self.sig.graph.nodes().forEach(function(node) {
+      nodes.forEach(function(node) {
         if (node.attributes.type === 'normal')
           return;
 
@@ -127,6 +135,21 @@
 
       // Refreshing view
       self.sig.refresh();
+
+      // Size
+      var xs = nodes.map(collect('read_cammain:x')),
+          ys = nodes.map(collect('read_cammain:y')),
+          maxX = Math.max.apply(null, xs),
+          maxY = Math.max.apply(null, ys),
+          minX = Math.min.apply(null, xs),
+          minY = Math.min.apply(null, ys),
+          centerX = (maxX + minX) / 2,
+          centerY = (maxY + minY) / 2,
+          distance = Math.sqrt(
+            Math.pow(maxX + centerX, 2) +
+            Math.pow(maxY + centerY, 2)
+          );
+      self.size = distance;
 
       callback();
     });
@@ -172,12 +195,6 @@
   Abstract.prototype.focuseOnGroupByLabels = function(labels) {
     var nodes = this.findNodesByLabel(labels);
 
-    var collect = function(prop) {
-      return function(node) {
-        return node[prop];
-      };
-    };
-
     // Computing bouding rectangle's center
     var xs = nodes.map(collect('read_cammain:x')),
         ys = nodes.map(collect('read_cammain:y')),
@@ -189,15 +206,16 @@
         centerY = (maxY + minY) / 2,
         distance = Math.sqrt(
           Math.pow(maxX + centerX, 2) +
-          Math.pow(maxY - centerY, 2)
+          Math.pow(maxY + centerY, 2)
         );
+
 
     sigma.misc.animation.camera(
       this.camera,
       {
         x: centerX,
         y: centerY,
-        ratio: 0.08 / Math.log(distance)
+        ratio: 0.8 * distance / this.size
       },
       {duration: 150}
     );
