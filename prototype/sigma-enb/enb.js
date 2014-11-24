@@ -11,7 +11,20 @@
 
   // Safeguard
   if (!('sigma' in this))
-    throw Error('ENBGraph: sigma is not in scope.');
+    throw Error('enb: sigma is not in scope.');
+
+  /**
+   * Cluster Label Renderer
+   */
+  sigma.canvas.nodes.clusterLabel = function(node, context, settings) {
+    var prefix = settings('prefix') || '';
+
+    context.fillText(
+      node.label,
+      Math.round(node[prefix + 'x'] + size + 3),
+      Math.round(node[prefix + 'y'] + fontSize / 3)
+    );
+  };
 
   /**
    * Helpers
@@ -66,16 +79,65 @@
     });
   };
 
+  // Finding nodes by label
+  // NOTE: this is hardly optimal to use a filter here...
+  // NOTE: order of query is not returned
+  Abstract.prototype.findNodesByLabel = function(labels) {
+    var fuzzyLabels = labels.map(fuzzyLabel);
+
+    return this.sig.graph.nodes().filter(function(node) {
+      return ~fuzzyLabels.indexOf(fuzzyLabel(node.label));
+    });
+  };
+
   // Focusing on a precise node
   Abstract.prototype.focusOnNodeByLabel = function(label) {
     var node = this.findNodeByLabel(label);
-    console.log(node);
+
+    if (!node)
+      throw Error('enb.focusOnNodeByLabel: inexistant node for label "' + label + '".');
+
     sigma.misc.animation.camera(
       this.camera,
       {
         x: node['read_cammain:x'],
         y: node['read_cammain:y'],
         ratio: 0.1
+      },
+      {duration: 150}
+    );
+  };
+
+  // Focusing on a group of nodes
+  Abstract.prototype.focuseOnGroupByLabels = function(labels) {
+    var nodes = this.findNodesByLabel(labels);
+
+    var collect = function(prop) {
+      return function(node) {
+        return node[prop];
+      };
+    };
+
+    // Computing bouding rectangle's center
+    var xs = nodes.map(collect('read_cammain:x')),
+        ys = nodes.map(collect('read_cammain:y')),
+        maxX = Math.max.apply(null, xs),
+        maxY = Math.max.apply(null, ys),
+        minX = Math.min.apply(null, xs),
+        minY = Math.min.apply(null, ys),
+        centerX = (maxX + minX) / 2,
+        centerY = (maxY + minY) / 2,
+        distance = Math.sqrt(
+          Math.pow(maxX + centerX, 2) +
+          Math.pow(maxY - centerY, 2)
+        );
+
+    sigma.misc.animation.camera(
+      this.camera,
+      {
+        x: centerX,
+        y: centerY,
+        ratio: 0.08 / Math.log(distance)
       },
       {duration: 150}
     );
