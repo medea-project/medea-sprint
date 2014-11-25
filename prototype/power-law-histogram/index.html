@@ -1,0 +1,26 @@
+<style type="text/css">
+  svg rect {
+    fill: #4F3E40;
+  }
+
+  svg rect:hover {
+    fill: #C76FC9;
+  }
+
+  svg text {
+    fill: black;
+    font: 10px sans-serif;
+    text-anchor: middle;
+  }
+</style>
+<div id="containerall"></div>
+<div id="containernon"></div>
+<div id="containerbridge"></div>
+<script src="lib/d3.min.js"></script>
+<script src="histogram.js"></script>
+<script type="text/javascript">
+  var histogram = new PowerLawHistogram();
+  histogram.load('data/participations.json', function() {
+    histogram.drawChartAll('#containerall');
+  });
+</script>
