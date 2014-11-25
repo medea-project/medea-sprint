@@ -1,2 +1,2 @@
-http://d3js.org/ - BSD License Copyright 2013 Mike Bostock.
-https://github.com/benfred/venn.js - MIT License Copyright 2013 Ben Frederickson.
+http://d3js.org/ - BSD License © 2013 Mike Bostock.
+https://github.com/benfred/venn.js - MIT License © 2013 Ben Frederickson.

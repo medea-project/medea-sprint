@@ -6,17 +6,18 @@
 
 <body>
  <div id="venn">
-
+ </div>
+ <div id="venn2">
  </div>
 
  <script type="text/javascript" src="js/d3-3.4.13.min.js"></script>
  <script type="text/javascript" src="js/venn.js"></script>
  <script type="text/javascript" src="js/ipcc-wg-venn.js"></script>
  <script>
-  d3.json("data/participations-wg-venn.json", function(data) {
-      venn.display_data("#venn", data["AR-1"], 300, 300);
-    });
-
+  venn.load_data("data/participations-wg-venn.json", function() {
+    venn.plotGlobalAR("#venn", 500, 300);
+    venn.plotAnnualARs("#venn2", 500, 300)
+  });
  </script>
 </body>
 </html>

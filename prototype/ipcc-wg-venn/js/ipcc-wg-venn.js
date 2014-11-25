@@ -1,11 +1,41 @@
 (function(venn) {
   "use strict";
 
+  venn.AR_data = null;
+  venn.load_data = function(path, callback) {
+    if (venn.AR_data) {
+      return;
+    }
+    d3.json("data/participations-wg-venn.json", function(data) {
+      venn.AR_data = data;
+      return callback();
+    });
+  };
+
+  venn.plotGlobalAR = function(container, width, height) {
+    venn.display_data(container, venn.AR_data["AR-global"], width, height);
+  };
+
+  venn.plotAnnualARs = function(container, width, height) {
+    d3.select(container).style("text-align", "center");
+    [1,2,3,4,5].forEach(function(i) {
+      var id = "AR-" + i;
+      var div = d3.select(container).append("div")
+        .attr("id", id)
+        .style("float", "left");
+      if (i == 4) {
+        div.style("clear", "both")
+          .style("margin-left", width/6);
+      }
+      venn.display_data("#" + id, venn.AR_data[id], width/3, height/2);
+    });
+  };
+
   venn.display_data = function(div_id, data, width, height) {
     // draw the diagram
     var diagram = venn.drawD3Diagram(
       d3.select(div_id),
-      venn.venn(sets, overlaps),
+      venn.venn(data["sets"], data["overlaps"]),
       width, height
     );
       
@@ -17,7 +47,7 @@
       .style("fill-opacity", .8);
     diagram.text.style("fill", "#111")
       .style("font-family", "Arial")
-      .style("font-size", "16px");
+      .style("font-size", "12px");
 
     d3.selection.prototype.moveParentToFront = function() {
       return this.each(function() {
@@ -95,7 +125,6 @@
       .on("mousemove", function() {
         tooltip.moveTooltip();
       })
-
     };
-}(window.venn = window.venn || {}));
 
+}(window.venn = window.venn || {}));
