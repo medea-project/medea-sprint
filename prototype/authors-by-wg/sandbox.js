@@ -85,10 +85,10 @@
       .innerRadius(settings.radius - 70);
 
     var pie = d3.layout.pie()
-        .value(function(d) { return d[settings.column] })
         .sort(function(a, b){
-          return order[a] - order[b]
+          return order[a[settings.labelColumn]] - order[b[settings.labelColumn]]
         })
+        .value(function(d) { return d[settings.column] })
 
     var svg = d3.select(container).append("svg")
         .attr("width", settings.width)
@@ -103,7 +103,12 @@
         
     g.append("path")
         .attr("d", arc)
-        .style("fill", function(d) {return colors[d.data[settings.labelColumn]]; });
+        .style("fill", function(d) {return colors[d.data[settings.labelColumn]]; })
+
+        // INTERACTIONS CLICK
+        .on('click', function(d){
+          alert(d.data[settings.column] + '\n' + d.data[settings.labelColumn])
+        })
 
     g.append("text")
         .attr("transform", function(d) { return "translate(" + arc.centroid(d) + ")"; })
