@@ -3,6 +3,7 @@
   
   ns.sourceFile = 'bridge_authors_by_ar_wg_chapter.csv'
   ns.wgStructure = {}
+  ns.wgSizes = {}
 
   ns.run = function(){
     ns.loadFile(
@@ -28,38 +29,176 @@
     data.forEach(function(obj){
       ns.wgStructure[obj.WG][obj['Chapter #']] = ns.wgStructure[obj.WG][obj['Chapter #']] || obj['Chapter Title']
     })
+    for(var wg in ns.wgStructure){
+      ns.wgSizes[wg] = 0
+      for(var ch in ns.wgStructure[wg]){
+        ns.wgSizes[wg]++
+      }
+    }
     console.log('Working Group Structure', ns.wgStructure)
 
-    // Process each AR separately
-    for(var ar = 1; ar <= 5; ar++){
-      ns.processAR(data, ''+ar)
-    }
+    ns.data = data
+
+    // Process the first AR
+    ns.processAR(1)
   }
 
-  ns.processAR = function(data, ar){
-    
-    // Filter nodes present in the right AR
-    data.filter(function(obj){
-      return obj.AR == ar
-    })
+  ns.processAR = function(ar){
 
-    var table = data.map(function(obj){
-      return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['AR']]
-    })
+    var table = ns.data
+    // Filter nodes present in the right AR
+    .filter(function(obj){
+        return obj.AR == ''+ar
+      })
+    // Build a table with minimal columns
+    .map(function(obj){
+        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG']]
+      })
+
+    // Table headline
+    table.unshift(['Author', 'Chapter', 'WG'])
 
     // Build the network
     var settings = {
       mode: 'bipartite'
       ,nodesColumnId1: 0
-      ,nodesMetadataColumnIds1: []
+      ,nodesMetadataColumnIds1: [2]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: []
       ,jsonCallback: function(json){
-        console.log('AR ' + ar, table, json)
+        
+        // Build indexes
+        json_graph_api.buildIndexes(json)
+
+        json = ns.filterByMultipleWG(json)
+
+        ns.setCoordinates(json)
+
+        ns.makeUp(json)
+        
+        console.log('AR '+ar, json)
+
+        // Download
+        var blob = new Blob(json_graph_api.buildGEXF(json), {'type':'text/gexf+xml;charset=utf-8'})
+        ,filename = "Bridges for AR " + ar + ".gexf"
+        console.log('filename ' + filename)
+        saveAs(blob, filename)
+
+        if(ar < 5){
+          // ns.processAR(ar + 1)
+        }
       }
     }
     table2net.buildGraph(table, settings)
 
+  }
+
+  ns.filterByMultipleWG = function(g){
+    var nodesToRemove = g.nodes.filter(function(n){
+      return n.attributes_byId.attr_type == 'Author'
+    }).filter(function(n){
+      // Multiple WG will create a string with the pipe ("|") separator.
+      // No pipe means: not a bridge
+      return n.attributes_byId.attr_1_2.indexOf('|') < 0
+    }).map(function(n){
+      return n.id
+    })
+
+    g = json_graph_api.getBackbone(g)
+    g.nodes = g.nodes.filter(function(n){
+      return nodesToRemove.indexOf(n.id) < 0
+    })
+    g.edges = g.edges.filter(function(e){
+      return nodesToRemove.indexOf(e.sourceID) < 0 && nodesToRemove.indexOf(e.targetID) < 0
+    })
+
+    json_graph_api.buildIndexes(g)
+
+    return g
+  }
+
+  ns.setCoordinates = function(g){
+    var chapterCoordinates = {}
+    ,chapterNames = {}
+    ,x
+    ,y
+    ,i
+    ,percent
+    ,r = 1000 // Radius
+    ,jitter = 10
+    ,wgOrderedList = ['WG I', 'WG II', 'WG III']
+
+    wgOrderedList.forEach(function(wg){
+      i = 0
+      for(var ch in ns.wgStructure[wg]){
+        percent = i / (ns.wgSizes[wg] - 1)
+        i++
+        if(wg == 'WG I'){
+          x = r * (-1/2 + percent)
+          y = r * Math.sin(Math.PI / 3)
+        } else if(wg == 'WG II'){
+          x = r * (1 - 1/2 * percent)
+          y = r * percent * Math.sin(-Math.PI / 3)
+        } else if(wg == 'WG III'){
+          x = r * (-1/2 - percent * 1/2)
+          y = r * (Math.sin(-2 * Math.PI / 3) - percent * Math.sin(-2 * Math.PI / 3))
+        }
+        var key = wg.toLowerCase() + ' - ' + ch.toLowerCase()
+        chapterCoordinates[key] = {x: x, y: -y}
+        chapterNames[key] = ns.wgStructure[wg][ch]
+      }
+    })
+
+    // Coordinates of Chapter nodes
+    g.nodes.forEach(function(n){
+      if(n.attributes_byId['attr_type'] == 'Chapter'){
+        var c = chapterCoordinates[n.label]
+        n.x = c.x || r + 10
+        n.y = c.y || r + 10
+        // n.label = chapterNames[n.label]
+        n.label = n.label.toUpperCase()
+      }
+    })
+
+    // Coordinate of Author nodes
+    g.nodes.forEach(function(n){
+      if(n.attributes_byId['attr_type'] == 'Author'){
+        n.label = ns.titleCase(n.label)
+        // Barycenter
+        var x = 0
+        ,y = 0
+        ,count = 0
+        n.outEdges.forEach(function(e){
+          var n2 = e.target
+          ,w = e.attributes_byId.matchings_count
+          if(n2.x !== undefined && n2.y !== undefined){
+            x += n2.x * w
+            y += n2.y * w
+            count += w
+          }
+        })
+        var angle = Math.random() * Math.PI * 2
+        n.x = x / count + Math.random() * jitter * Math.cos(angle)
+        n.y = y / count + Math.random() * jitter * Math.sin(angle)
+      }
+    })
+
+  }
+
+  ns.makeUp = function(g){
+    g.nodes.forEach(function(n){
+      if(n.attributes_byId['attr_type'] == 'Author')
+        n.label = ns.titleCase(n.label)
+    })
+  }
+
+  ns.titleCase = function (input) {
+    var words = input.split(' ');
+    for (var i = 0; i < words.length; i++) {
+      words[i] = words[i].toLowerCase(); // lowercase everything to get rid of weird casing issues
+      words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
+    }
+    return words.join(' ');
   }
 
 })(window.script = window.script || {}, jQuery)
