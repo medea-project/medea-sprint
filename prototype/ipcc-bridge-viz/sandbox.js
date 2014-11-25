@@ -2,7 +2,7 @@
   'use strict';
   
   ns.sourceFile = 'bridge_authors_by_ar_wg_chapter.csv'
-  ns.wgStructure = {}
+  ns.structure = {1:{}, 2:{}, 3:{}, 4:{}, 5:{}} // ARs
   ns.wgSizes = {}
 
   ns.run = function(){
@@ -21,26 +21,20 @@
 
     // Index working groups and chapters
     data.forEach(function(obj){
-      ns.wgStructure[obj.WG] = true
+      // Init WG in each AR
+      ns.structure[obj.AR][obj.WG] = {}
     })
-    for(var wg in ns.wgStructure){
-      ns.wgStructure[wg] = {}
-    }
     data.forEach(function(obj){
-      ns.wgStructure[obj.WG][obj['Chapter #']] = ns.wgStructure[obj.WG][obj['Chapter #']] || obj['Chapter Title']
+      // Titles
+      ns.structure[obj.AR][obj.WG][obj['Chapter #']] = ns.structure[obj.AR][obj.WG][obj['Chapter #']] || obj['Chapter Title']
     })
-    for(var wg in ns.wgStructure){
-      ns.wgSizes[wg] = 0
-      for(var ch in ns.wgStructure[wg]){
-        ns.wgSizes[wg]++
-      }
-    }
-    console.log('Working Group Structure', ns.wgStructure)
+    console.log('Structure', ns.structure)
 
     ns.data = data
 
-    // Process the first AR
+    // Start processing
     ns.processAR(1)
+    
   }
 
   ns.processAR = function(ar){
@@ -52,7 +46,7 @@
       })
     // Build a table with minimal columns
     .map(function(obj){
-        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG']]
+        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'] + ' - ' + obj['AR'], obj['WG']]
       })
 
     // Table headline
@@ -72,7 +66,7 @@
 
         json = ns.filterByMultipleWG(json)
 
-        ns.setCoordinates(json)
+        ns.setCoordinates(json, [ar])
 
         ns.makeUp(json)
         
@@ -100,19 +94,25 @@
     var table = ns.data
     // Build a table with minimal columns
     .map(function(obj){
-        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG'], obj['WG'] + ' / AR '+obj['AR']]
+        return [
+          obj['Bridge Author']
+          ,obj['WG'] + ' - ' + obj['Chapter #'] + ' - ' + obj['AR']
+          ,obj['WG']
+          ,obj['AR']
+          ,obj['WG'] + ' / AR '+obj['AR']
+        ]
       })
 
     // Table headline
-    table.unshift(['Author', 'Chapter', 'WG', 'WGxAR'])
+    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR'])
 
     // Build the network
     var settings = {
       mode: 'bipartite'
       ,nodesColumnId1: 0
-      ,nodesMetadataColumnIds1: [2, 3]
+      ,nodesMetadataColumnIds1: [4]
       ,nodesColumnId2: 1
-      ,nodesMetadataColumnIds2: []
+      ,nodesMetadataColumnIds2: [2, 3]
       ,jsonCallback: function(json){
         
         // Build indexes
@@ -120,7 +120,7 @@
 
         json = ns.filterIntraARBridges(json)
 
-        ns.setCoordinates(json)
+        ns.setCoordinates(json, [1, 2, 3, 4, 5])
 
         ns.makeUp(json)
 
@@ -142,19 +142,25 @@
     var table = ns.data
     // Build a table with minimal columns
     .map(function(obj){
-        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG'], obj['WG'] + ' / AR '+obj['AR']]
+        return [
+          obj['Bridge Author']
+          ,obj['WG'] + ' - ' + obj['Chapter #'] + ' - ' + obj['AR']
+          ,obj['WG']
+          ,obj['AR']
+          ,obj['WG'] + ' / AR '+obj['AR']
+        ]
       })
 
     // Table headline
-    table.unshift(['Author', 'Chapter', 'WG', 'WGxAR'])
+    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR'])
 
     // Build the network
     var settings = {
       mode: 'bipartite'
       ,nodesColumnId1: 0
-      ,nodesMetadataColumnIds1: [2, 3]
+      ,nodesMetadataColumnIds1: [4]
       ,nodesColumnId2: 1
-      ,nodesMetadataColumnIds2: []
+      ,nodesMetadataColumnIds2: [2, 3]
       ,jsonCallback: function(json){
         
         // Build indexes
@@ -162,7 +168,7 @@
 
         json = ns.filterInterARBridges(json)
 
-        ns.setCoordinates(json)
+        ns.setCoordinates(json, [1, 2, 3, 4, 5])
 
         ns.makeUp(json)
 
@@ -184,7 +190,7 @@
       return n.attributes_byId.attr_type == 'Author'
     }).filter(function(n){
       // We search for nodes that have different WG in different AR
-      var WGxAR = n.attributes_byId.attr_1_3.split(' | ')
+      var WGxAR = n.attributes_byId.attr_1_4.split(' | ')
       return !WGxAR.some(function(d, i){
         var dsplit = d.split(' / ')
         ,wg = dsplit[0]
@@ -217,7 +223,7 @@
   }
 
   ns.filterIntraARBridges = function(g){
-    
+    console.log(g)
     var nodesToRemove = g.nodes.filter(function(n){
       return n.attributes_byId.attr_type == 'Author'
     }).filter(function(n){
@@ -227,7 +233,7 @@
       ars.forEach(function(ar){
         wgByAr[ar] = []
       })
-      n.attributes_byId.attr_1_3.split(' | ').forEach(function(d){
+      n.attributes_byId.attr_1_4.split(' | ').forEach(function(d){
         var dsplit = d.split(' / ')
         ,wg = dsplit[0]
         ,ar = +dsplit[1].split(' ')[1]
@@ -277,7 +283,7 @@
     return g
   }
 
-  ns.setCoordinates = function(g){
+  ns.setCoordinates = function(g, ar_list){
     var chapterCoordinates = {}
     ,chapterNames = {}
     ,x
@@ -287,36 +293,62 @@
     ,r = 1000 // Radius
     ,jitter = 10
     ,wgOrderedList = ['WG I', 'WG II', 'WG III']
+    ,wgSizes = {}
+    ,ar_current
 
     wgOrderedList.forEach(function(wg){
-      i = 0
-      for(var ch in ns.wgStructure[wg]){
-        percent = i / (ns.wgSizes[wg] - 1)
-        i++
-        if(wg == 'WG I'){
-          x = r * (-1/2 + percent)
-          y = r * Math.sin(Math.PI / 3)
-        } else if(wg == 'WG II'){
-          x = r * (1 - 1/2 * percent)
-          y = r * percent * Math.sin(-Math.PI / 3)
-        } else if(wg == 'WG III'){
-          x = r * (-1/2 - percent * 1/2)
-          y = r * (Math.sin(-2 * Math.PI / 3) - percent * Math.sin(-2 * Math.PI / 3))
-        }
-        var key = wg.toLowerCase() + ' - ' + ch.toLowerCase()
-        chapterCoordinates[key] = {x: x, y: -y}
-        chapterNames[key] = ns.wgStructure[wg][ch]
-      }
+      wgSizes[wg] = 0
     })
+
+    ar_list.forEach(function(ar){
+      wgOrderedList.forEach(function(wg){
+        for(var ch in ns.structure[ar][wg]){
+          wgSizes[wg]++
+        }
+      })
+    })
+    wgOrderedList.forEach(function(wg){
+      ar_current = 0
+      ar_list.forEach(function(ar){
+        i = 0
+        for(var ch in ns.structure[ar][wg]){
+          percent = (ar_current + i) / (wgSizes[wg] - 1)
+          i++
+          if(wg == 'WG I'){
+            x = r * (-1/2 + percent)
+            y = r * Math.sin(Math.PI / 3)
+          } else if(wg == 'WG II'){
+            x = r * (1 - 1/2 * percent)
+            y = r * percent * Math.sin(-Math.PI / 3)
+          } else if(wg == 'WG III'){
+            x = r * (-1/2 - percent * 1/2)
+            y = r * (Math.sin(-2 * Math.PI / 3) - percent * Math.sin(-2 * Math.PI / 3))
+          }
+          var key = wg.toLowerCase() + ' - ' + ch.toLowerCase() + ' - ' + ar
+          chapterCoordinates[key] = {x: x, y: -y}
+          chapterNames[key] = ns.structure[ar][wg][ch]
+        }
+        ar_current += i
+      })
+    })
+
+    console.log('chapterCoordinates', chapterCoordinates)
+
 
     // Coordinates of Chapter nodes
     g.nodes.forEach(function(n){
       if(n.attributes_byId['attr_type'] == 'Chapter'){
         var c = chapterCoordinates[n.label]
+        if(c === undefined){
+          console.log('Unknown chapter', n.label)
+        }
+        if(c.x == 0 && c.y == 0){
+          console.log('Zero coordinates', n.label)
+        }
         n.x = c.x
         n.y = c.y
-        // n.label = chapterNames[n.label]
-        n.label = n.label.toUpperCase()
+        n.label = chapterNames[n.label]
+        // n.label = n.label.toUpperCase()
       }
     })
 
@@ -359,6 +391,22 @@
       words[i] = words[i].charAt(0).toUpperCase() + words[i].slice(1);
     }
     return words.join(' ');
+  }
+
+  ns.mergeNetworks = function(obsoleteGraph, resultGraph){
+    obsoleteGraph.nodes.forEach(function(n){
+      resultGraph.nodes.push(n)
+    })
+    resultGraph.edges = resultGraph.edges.concat(obsoleteGraph.edges)
+
+    // Filter the nodes
+    var remainingNodes = {}
+    resultGraph.nodes.forEach(function(n){
+      remainingNodes[n.id] = true
+    })
+    resultGraph.edges = resultGraph.edges.filter(function(e){
+      return remainingNodes[e.sourceID] && remainingNodes[e.targetID]
+    })
   }
 
 })(window.script = window.script || {}, jQuery)
