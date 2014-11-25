@@ -126,7 +126,7 @@
 
       // Giving precise node types
       nodes.forEach(function(node) {
-        if (node.attributes.type === 'normal')
+        if (node.attributes.type !== 'clusterLabel')
           return;
 
         node.type = 'clusterLabel';
