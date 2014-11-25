@@ -2,25 +2,23 @@
 <head>
   <title>Distribution of Authors by Working Groups</title>
   <meta charset="utf-8">
-  <style>
 
-body {
+  <style>
+.doughnut{
   font: 10px sans-serif;
 }
 
 .arc path {
   stroke: #fff;
 }
-
   </style>
-
 </head>
 <body>
   <h1>Distribution of Authors by Working Groups</h1>
   <p class="text-info">
     <ul>
       <li>
-        ...across Assessment Reports, by Country Affiliation
+        ...across Assessment Reports, by Country Affiliation (FRANCE)
       </li>
       <li>
         ...cumulative Assessment Reports, comparing Each Country to the Total
@@ -31,10 +29,34 @@ body {
     </ul>
   </p>
 
+  <hr>
+  <h2>Distribution of authors by working groups across assessment reports, by country affiliation</h2>
+  <table><tr>
+    <td>
+      <div class="doughnut" id="france1"></div>
+      <div><center>FRANCE - AR 1</center></div>
+    </td>
+    <td>
+      <div class="doughnut" id="france2"></div>
+      <div><center>FRANCE - AR 2</center></div>
+    </td>
+    <td>
+      <div class="doughnut" id="france3"></div>
+      <div><center>FRANCE - AR 3</center></div>
+    </td>
+    <td>
+      <div class="doughnut" id="france4"></div>
+      <div><center>FRANCE - AR 4</center></div>
+    </td>
+    <td>
+      <div class="doughnut" id="france5"></div>
+      <div><center>FRANCE - AR 5</center></div>
+    </td>
+  </tr></table>
+
   <script src="assets/jquery.js"></script>
   <script src="assets/jquery.md5.js"></script>
   <script src="assets/d3.min.js"></script>
-  <script src="assets/FileSaver.js"></script>
   <script src="sandbox.js"></script>
 </body>
 </html>
