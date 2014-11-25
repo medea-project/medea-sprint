@@ -3,7 +3,7 @@ var csv = require('csv-parse'),
     argv = require('yargs').argv;
 
 if (!argv.input)
-  throw Error('No input given: --input X');
+  throw Error('No input given: --input xxx.csv');
 
 var aIndex = {};
 
@@ -18,6 +18,7 @@ csv(fs.readFileSync(argv.input, 'utf-8'), function(err, participations) {
         id: id,
         bridge: false,
         wg: p[2],
+        author: p[6],
         participations: 1
       };
     }
