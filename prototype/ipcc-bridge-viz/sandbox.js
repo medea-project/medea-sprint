@@ -85,12 +85,172 @@
         saveAs(blob, filename)
 
         if(ar < 5){
-          // ns.processAR(ar + 1)
+          ns.processAR(ar + 1)
+        } else {
+          ns.processIntraAR()
         }
       }
     }
     table2net.buildGraph(table, settings)
 
+  }
+
+  ns.processIntraAR = function(){
+
+    var table = ns.data
+    // Build a table with minimal columns
+    .map(function(obj){
+        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG'], obj['WG'] + ' / AR '+obj['AR']]
+      })
+
+    // Table headline
+    table.unshift(['Author', 'Chapter', 'WG', 'WGxAR'])
+
+    // Build the network
+    var settings = {
+      mode: 'bipartite'
+      ,nodesColumnId1: 0
+      ,nodesMetadataColumnIds1: [2, 3]
+      ,nodesColumnId2: 1
+      ,nodesMetadataColumnIds2: []
+      ,jsonCallback: function(json){
+        
+        // Build indexes
+        json_graph_api.buildIndexes(json)
+
+        json = ns.filterIntraARBridges(json)
+
+        ns.setCoordinates(json)
+
+        ns.makeUp(json)
+
+        // Download
+        var blob = new Blob(json_graph_api.buildGEXF(json), {'type':'text/gexf+xml;charset=utf-8'})
+        ,filename = "Bridges Intra AR.gexf"
+        console.log('filename ' + filename)
+        saveAs(blob, filename)
+
+        ns.processInterAR()
+      }
+    }
+    table2net.buildGraph(table, settings)
+
+  }
+
+  ns.processInterAR = function(){
+
+    var table = ns.data
+    // Build a table with minimal columns
+    .map(function(obj){
+        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'], obj['WG'], obj['WG'] + ' / AR '+obj['AR']]
+      })
+
+    // Table headline
+    table.unshift(['Author', 'Chapter', 'WG', 'WGxAR'])
+
+    // Build the network
+    var settings = {
+      mode: 'bipartite'
+      ,nodesColumnId1: 0
+      ,nodesMetadataColumnIds1: [2, 3]
+      ,nodesColumnId2: 1
+      ,nodesMetadataColumnIds2: []
+      ,jsonCallback: function(json){
+        
+        // Build indexes
+        json_graph_api.buildIndexes(json)
+
+        json = ns.filterInterARBridges(json)
+
+        ns.setCoordinates(json)
+
+        ns.makeUp(json)
+
+        // Download
+        var blob = new Blob(json_graph_api.buildGEXF(json), {'type':'text/gexf+xml;charset=utf-8'})
+        ,filename = "Bridges Inter AR.gexf"
+        console.log('filename ' + filename)
+        saveAs(blob, filename)
+
+      }
+    }
+    table2net.buildGraph(table, settings)
+
+  }
+
+  ns.filterInterARBridges = function(g){
+    
+    var nodesToRemove = g.nodes.filter(function(n){
+      return n.attributes_byId.attr_type == 'Author'
+    }).filter(function(n){
+      // We search for nodes that have different WG in different AR
+      var WGxAR = n.attributes_byId.attr_1_3.split(' | ')
+      return !WGxAR.some(function(d, i){
+        var dsplit = d.split(' / ')
+        ,wg = dsplit[0]
+        ,ar = dsplit[1]
+        
+        return WGxAR.some(function(d2, j){
+          if(j <= i)
+            return false
+          var d2split = d2.split(' / ')
+          ,wg2 = d2split[0]
+          ,ar2 = d2split[1]
+          return wg != wg2 && ar != ar2
+        })
+      })
+    }).map(function(n){
+      return n.id
+    })
+
+    g = json_graph_api.getBackbone(g)
+    g.nodes = g.nodes.filter(function(n){
+      return nodesToRemove.indexOf(n.id) < 0
+    })
+    g.edges = g.edges.filter(function(e){
+      return nodesToRemove.indexOf(e.sourceID) < 0 && nodesToRemove.indexOf(e.targetID) < 0
+    })
+
+    json_graph_api.buildIndexes(g)
+
+    return g
+  }
+
+  ns.filterIntraARBridges = function(g){
+    
+    var nodesToRemove = g.nodes.filter(function(n){
+      return n.attributes_byId.attr_type == 'Author'
+    }).filter(function(n){
+      // We search for nodes that have different WG in the same AR
+      var ars = [1,2,3,4,5]
+      ,wgByAr = {}
+      ars.forEach(function(ar){
+        wgByAr[ar] = []
+      })
+      n.attributes_byId.attr_1_3.split(' | ').forEach(function(d){
+        var dsplit = d.split(' / ')
+        ,wg = dsplit[0]
+        ,ar = +dsplit[1].split(' ')[1]
+        wgByAr[ar].push(wg)
+      })
+      return !ars.some(function(ar){
+        return wgByAr[ar].length > 1
+      })
+    }).map(function(n){
+      return n.id
+    })
+
+    g = json_graph_api.getBackbone(g)
+    g.nodes = g.nodes.filter(function(n){
+      return nodesToRemove.indexOf(n.id) < 0
+    })
+    g.edges = g.edges.filter(function(e){
+      return nodesToRemove.indexOf(e.sourceID) < 0 && nodesToRemove.indexOf(e.targetID) < 0
+    })
+
+    json_graph_api.buildIndexes(g)
+
+    return g
   }
 
   ns.filterByMultipleWG = function(g){
@@ -153,8 +313,8 @@
     g.nodes.forEach(function(n){
       if(n.attributes_byId['attr_type'] == 'Chapter'){
         var c = chapterCoordinates[n.label]
-        n.x = c.x || r + 10
-        n.y = c.y || r + 10
+        n.x = c.x
+        n.y = c.y
         // n.label = chapterNames[n.label]
         n.label = n.label.toUpperCase()
       }
