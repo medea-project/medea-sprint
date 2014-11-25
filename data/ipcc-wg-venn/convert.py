@@ -5,15 +5,15 @@ import json, copy
 data = {}
 emptyset = {
   "sets": [
-    {"label": "WG 1", "size": 0},
-    {"label": "WG 2", "size": 0},
-    {"label": "WG 3", "size": 0}
+    {"label": "WG 1", "size": 0, "color": "#EA3133"},
+    {"label": "WG 2", "size": 0, "color": "#00A0DB"},
+    {"label": "WG 3", "size": 0, "color": "#FFEB50"}
   ],
   "overlaps": [
-    {"label": "WG 1&2", "sets": [0, 1], "size": 0},
-    {"label": "WG 1&3", "sets": [0, 2], "size": 0},
-    {"label": "WG 2&3", "sets": [1, 2], "size": 0},
-    {"label": "WG 1&2&3", "sets": [0, 1, 2], "size": 0}
+    {"label": "WGs 1&2", "sets": [0, 1], "size": 0, "color": "#961479"},
+    {"label": "WGs 1&3", "sets": [0, 2], "size": 0, "color": "#F59233"},
+    {"label": "WGs 2&3", "sets": [1, 2], "size": 0, "color": "#94BE3F"},
+    {"label": "WGs 1&2&3", "sets": [0, 1, 2], "size": 0, "color": "#888"}
   ]
 }
 
@@ -29,7 +29,7 @@ def filler(dico, gr, va):
         for i in figs:
             dico["sets"][i-1]["size"] += va
         for k in dico["overlaps"]:
-            if k["label"] == "WG %s&%s" % (figs[0], figs[1]):
+            if k["label"] == "WGs %s&%s" % (figs[0], figs[1]):
                 k["size"] += va
     else:
         dico["sets"][int(gr.lstrip("WG"))-1]["size"] += va

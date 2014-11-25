@@ -1,11 +1,7 @@
 (function(venn) {
   "use strict";
 
-  venn.display_data = function(div_id, width, height) {
-    // define sets and set set intersections
-    var sets = [{label: "WG1", size: 10}, {label: "WG2", size: 15}, {label: "WG3", size: 8}],
-      overlaps = [{sets: [0,1], size: 8}, {sets:[0,2], size: 4}, {sets: [0,1,2], size: 2}, {sets: [1,2], size: 3}];
-
+  venn.display_data = function(div_id, data, width, height) {
     // draw the diagram
     var diagram = venn.drawD3Diagram(
       d3.select(div_id),
@@ -13,13 +9,13 @@
       width, height
     );
       
-    var colours = d3.scale.category10();
     diagram.circles.style("fill-opacity", .2)
+      .style("stroke", function(d) { return d.color; })
       .style("stroke-width", 3)
       .style("stroke-opacity", .4)
-      .style("fill", function(d,i) { return colours(i); })
-      .style("stroke", function(d,i) { return colours(i); });
-    diagram.text.style("fill", function(d,i) { return colours(i); })
+      .style("fill", function(d) { return d.color; })
+      .style("fill-opacity", .8);
+    diagram.text.style("fill", "#111")
       .style("font-family", "Arial")
       .style("font-size", "16px");
 
@@ -38,17 +34,21 @@
         .style("fill-opacity", minop)
         .style("stroke-opacity", .4);
     };
-    d3.selection.prototype.showTooltip = function(text) {
+    d3.selection.prototype.showTooltip = function(d) {
       this.transition().style("opacity", .9);
-      return this.text(text);
+      return this.html("<b>" +
+        d.label.replace("WG", "Working Group")
+          .replace(/&/g, "&nbsp;&amp;&nbsp;") +
+        "</b><br/>" + d.size + " contributors");
     };
     d3.selection.prototype.hideTooltip = function() {
       return this.transition().style("opacity", 0);
     };
     d3.selection.prototype.moveTooltip = function() {
       return this.style("left", (d3.event.pageX) + "px")
-        .style("top", (d3.event.pageY - 28) + "px");
+        .style("top", (d3.event.pageY - 36) + "px");
     };
+    
 
     // add a tooltip showing the size of each set/intersection
     var tooltip = d3.select("body")
@@ -60,13 +60,12 @@
       .on("mouseover", function(d, i) {
         d3.select(this).select("circle")
           .moveParentToFront()
-          .highlight(.5)
-        console.log(d);
-        tooltip.showTooltip(d.size + " people");
+          .highlight(1)
+        tooltip.showTooltip(d);
       })
       .on("mouseout", function(d, i) {
         d3.select(this).select("circle")
-          .unhighlight(.2);
+          .unhighlight(.8);
         tooltip.hideTooltip();
       })
       .on("mousemove", function(){
@@ -75,23 +74,22 @@
     
     // draw a path around each intersection area, add hover there as well
     diagram.svg.selectAll("path")
-      .data(overlaps)
+      .data(data["overlaps"])
       .enter()
       .append("path")
       .attr("d", function(d) { 
         return venn.intersectionAreaPath(d.sets.map(function(j) {
-          return sets[j];
+          return data["sets"][j];
        })); 
       })
-      .style("fill-opacity", 0)
-      .style("fill", "black")
+      .style("fill-opacity", .8)
+      .style("fill", function(d) { return d.color;})
       .on("mouseover", function(d, i) {
-        d3.select(this).highlight(.1);
-        console.log(d);
-        tooltip.showTooltip(d.size + " people");
+        d3.select(this).highlight(1);
+        tooltip.showTooltip(d);
       })
       .on("mouseout", function(d, i) {
-        d3.select(this).unhighlight(0);
+        d3.select(this).unhighlight(0.8);
         tooltip.hideTooltip();
       })
       .on("mousemove", function() {

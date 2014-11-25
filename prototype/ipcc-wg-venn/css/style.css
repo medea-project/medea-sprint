@@ -5,8 +5,8 @@
 .venntooltip {
   position: absolute;
   text-align: center;
-  width: 128px;
-  height: 16px;
+  width: 200px;
+  height: 34px;
   background: #333;
   color: #ddd;
   padding: 2px;

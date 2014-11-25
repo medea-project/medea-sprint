@@ -13,8 +13,9 @@
  <script type="text/javascript" src="js/venn.js"></script>
  <script type="text/javascript" src="js/ipcc-wg-venn.js"></script>
  <script>
-
-  venn.display_data("#venn", 300, 300);
+  d3.json("data/participations-wg-venn.json", function(data) {
+      venn.display_data("#venn", data["AR-1"], 300, 300);
+    });
 
  </script>
 </body>
