@@ -7,26 +7,39 @@
     console.log('Parsed data', data)
     window.d = data // To have access in the console
 
-    ns.drawCountryArDoughnut('#france1', data, 'France', '1')
-    ns.drawCountryArDoughnut('#france2', data, 'France', '2')
-    ns.drawCountryArDoughnut('#france3', data, 'France', '3')
-    ns.drawCountryArDoughnut('#france4', data, 'France', '4')
-    ns.drawCountryArDoughnut('#france5', data, 'France', '5')
+    // a. Drawing a chart by AR for a given country (here: France)
+    ns.drawCountryArDoughnut('#a_france1', data, 'France', '1')
+    ns.drawCountryArDoughnut('#a_france2', data, 'France', '2')
+    ns.drawCountryArDoughnut('#a_france3', data, 'France', '3')
+    ns.drawCountryArDoughnut('#a_france4', data, 'France', '4')
+    ns.drawCountryArDoughnut('#a_france5', data, 'France', '5')
     
+    // b. Drawing a pair of charts by AR for a given country (comparing to total)
+    ns.drawCountryArDoughnut('#b_france1', data, 'France', '1')
+    ns.drawCountryArDoughnut('#b_total1', data, 'France', '1', {column: 'Total Authors'})
+    ns.drawCountryArDoughnut('#b_france2', data, 'France', '2')
+    ns.drawCountryArDoughnut('#b_total2', data, 'France', '2', {column: 'Total Authors'})
+    ns.drawCountryArDoughnut('#b_france3', data, 'France', '3')
+    ns.drawCountryArDoughnut('#b_total3', data, 'France', '3', {column: 'Total Authors'})
+    ns.drawCountryArDoughnut('#b_france4', data, 'France', '4')
+    ns.drawCountryArDoughnut('#b_total4', data, 'France', '4', {column: 'Total Authors'})
+    ns.drawCountryArDoughnut('#b_france5', data, 'France', '5')
+    ns.drawCountryArDoughnut('#b_total5', data, 'France', '5', {column: 'Total Authors'})
   })
   
-  ns.drawCountryArDoughnut = function(container, data, country, ar){
+  ns.drawCountryArDoughnut = function(container, data, country, ar, settings){
+    settings = settings || {}
+    settings.column = settings.column || 'Total Country Authors'
+    settings.labelColumn = settings.labelColumn || 'Cumulated WG'
+    settings.width = 300
+    settings.height = 300
+    
     var filteredData = data
       .filter(function(d){
         return d['Country'] == country && d['AR'] == ar
       })
 
-   ns.drawDoughnut(container, filteredData, {
-      column: 'Total Country Authors'
-      ,labelColumn: 'Cumulated WG'
-      ,width: 300
-      ,height: 300
-    })
+    ns.drawDoughnut(container, filteredData, settings)
   }
 
   ns.drawDoughnut = function(container, data, settings){
