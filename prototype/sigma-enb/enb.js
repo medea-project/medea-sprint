@@ -21,15 +21,13 @@
         fontSize,
         size = node[prefix + 'size'];;
 
-    fontSize = (settings('labelSize') === 'fixed') ?
-      settings('defaultLabelSize') :
+    fontSize = (true) ?
+      12 :
       settings('labelSizeRatio') * size;
 
-    context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
+    context.font = 'bold ' + (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
       fontSize + 'px ' + settings('font');
-    context.fillStyle = (settings('labelColor') === 'node') ?
-      (node.color || settings('defaultNodeColor')) :
-      settings('defaultLabelColor');
+    context.fillStyle = '#888';
 
     // Split lines and center
     function measure(string) {
@@ -43,7 +41,7 @@
       var width = measure(string);
 
       context.fillText(
-        string,
+        string.toUpperCase(),
         Math.round(node[prefix + 'x']) + (width !== longest ? (longest - width) / 2 : 0) - longest / 2,
         Math.round(node[prefix + 'y']) + (i * fontSize)
       );
@@ -68,6 +66,59 @@
   sigma.canvas.hovers.clusterLabel = Function.prototype;
   sigma.canvas.labels.clusterLabel = Function.prototype;
 
+  function measure(ctx, string) {
+    return ctx.measureText(string).width;
+  }
+
+  sigma.canvas.labels.custom = function(node, context, settings) {
+    var fontSize,
+        prefix = settings('prefix') || '',
+        size = node[prefix + 'size'];
+
+    if (size < settings('labelThreshold'))
+      return;
+
+    if (typeof node.label !== 'string')
+      return;
+
+    fontSize = (settings('labelSize') === 'fixed') ?
+      settings('defaultLabelSize') :
+      settings('labelSizeRatio') * size;
+
+    context.font = (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
+      fontSize + 'px ' + settings('font');
+    context.fillStyle = (settings('labelColor') === 'node') ?
+      (node.color || settings('defaultNodeColor')) :
+      settings('defaultLabelColor');
+
+    context.fillText(
+      node.label,
+      Math.round(node[prefix + 'x'] + size + 3),
+      Math.round(node[prefix + 'y'] + fontSize / 3)
+    );
+  };
+
+  sigma.canvas.nodes.custom = function(node, context, settings) {
+    var prefix = settings('prefix') || '';
+
+    context.fillStyle = node.color || settings('defaultNodeColor');
+    context.beginPath();
+    context.arc(
+     node[prefix + 'x'],
+     node[prefix + 'y'],
+     node[prefix + 'size'],
+     0,
+     Math.PI * 2,
+     true
+    );
+
+    context.closePath();
+    context.fill();
+
+    context.lineWidth = node.borderWidth || 1;
+    context.strokeStyle = node.borderColor || '#fff';
+    context.stroke();
+  };
 
   /**
    * Helpers
@@ -100,7 +151,11 @@
     this.size = 0;
     this.sig = new sigma({
       settings: {
-        singleHover: true
+        singleHover: true,
+        minNodeSize: 4,
+        maxNodeSize: 15,
+        labelSize: 'proportional',
+        labelSizeRatio: 1.2
       }
     });
     this.camera = this.sig.addCamera('main');
@@ -126,11 +181,19 @@
 
       // Giving precise node types
       nodes.forEach(function(node) {
-        if (node.attributes.type !== 'clusterLabel')
-          return;
+        if (node.attributes.type !== 'clusterLabel') {
+          node.color = node.attributes.color;
+          node.size = node.attributes.weight;
+          node.type = 'custom';
+        }
+        else {
+          node.type = 'clusterLabel';
+          node.size = 1;
+        }
+      });
 
-        node.type = 'clusterLabel';
-        node.size = 1;
+      self.sig.graph.edges().forEach(function(e) {
+        e.color = '#ddd';
       });
 
       // Refreshing view
