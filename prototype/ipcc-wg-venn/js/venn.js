@@ -129,7 +129,9 @@
         function sortOrder(a,b) {
             return b.size - a.size;
         }
-        mostOverlapped.sort(sortOrder);
+
+        // !! BOOGHETA: No reorder to keep first group on left
+        //mostOverlapped.sort(sortOrder);
 
         // keep track of what sets have been laid out
         var positioned = {};

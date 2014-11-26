@@ -6,7 +6,7 @@
     if (venn.AR_data) {
       return;
     }
-    d3.json("data/participations-wg-venn.json", function(data) {
+    d3.json(path, function(data) {
       venn.AR_data = data;
       return callback();
     });

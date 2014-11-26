@@ -53,5 +53,5 @@ for fil, ar in [
             gr, va = line.split(",")
             filler(data[ar], gr, va)
 
-with open("participations-wg-venn.json", "w") as f:
+with open("authors-by-wg-by-ar-venn.json", "w") as f:
     json.dump(data, f)
