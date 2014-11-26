@@ -5,16 +5,24 @@ import json, copy
 data = {}
 emptyset = {
   "sets": [
-    {"label": "WG 1", "size": 0, "color": "#EA3133"},
-    {"label": "WG 2", "size": 0, "color": "#00A0DB"},
-    {"label": "WG 3", "size": 0, "color": "#FFEB50"}
+    {"id": "WG 1", "size": 0, "color": "#EA3133", "label": "Physical basis"},
+    {"id": "WG 2", "size": 0, "color": "#00A0DB", "label": "Impacts"},
+    {"id": "WG 3", "size": 0, "color": "#FFEB50", "label": "Mitigation"}
   ],
   "overlaps": [
-    {"label": "WGs 1&2", "sets": [0, 1], "size": 0, "color": "#961479"},
-    {"label": "WGs 1&3", "sets": [0, 2], "size": 0, "color": "#F59233"},
-    {"label": "WGs 2&3", "sets": [1, 2], "size": 0, "color": "#94BE3F"},
-    {"label": "WGs 1&2&3", "sets": [0, 1, 2], "size": 0, "color": "#888"}
+    {"id": "WGs 1&2", "sets": [0, 1], "size": 0, "color": "#961479"},
+    {"id": "WGs 1&3", "sets": [0, 2], "size": 0, "color": "#F59233"},
+    {"id": "WGs 2&3", "sets": [1, 2], "size": 0, "color": "#94BE3F"},
+    {"id": "WGs 1&2&3", "sets": [0, 1, 2], "size": 0, "color": "#888"}
   ]
+}
+
+data["years"] = {
+  "AR-1": 1990,
+  "AR-2": 1995,
+  "AR-3": 2001,
+  "AR-4": 2007,
+  "AR-5": 2014
 }
 
 def filler(dico, gr, va):
@@ -29,7 +37,7 @@ def filler(dico, gr, va):
         for i in figs:
             dico["sets"][i-1]["size"] += va
         for k in dico["overlaps"]:
-            if k["label"] == "WGs %s&%s" % (figs[0], figs[1]):
+            if k["id"] == "WGs %s&%s" % (figs[0], figs[1]):
                 k["size"] += va
     else:
         dico["sets"][int(gr.lstrip("WG"))-1]["size"] += va
