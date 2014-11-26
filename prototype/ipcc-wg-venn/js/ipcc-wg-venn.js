@@ -13,10 +13,29 @@
   };
 
   venn.plotGlobalAR = function(container, width, height) {
-    venn.display_data(container, venn.AR_data["AR-global"], width, height);
+    venn.tooltip = d3.select(container)
+      .append("div")
+      .attr("class", "venntooltip");
+
+    d3.select(container).append("h3")
+      .style("class", "venntitle")
+      .style("text-align", "center")
+      .style("width", width + "px")
+      .html("Distribution of IPCC authors among the 3 working groups<br/>all assessment reports aggregated");
+    d3.select(container).append("div").attr("class", "venn");
+    venn.display_data(container + " .venn", venn.AR_data["AR-global"], width, height);
   };
 
   venn.plotAnnualARs = function(container, width, height) {
+    venn.tooltip = d3.select(container)
+      .append("div")
+      .attr("class", "venntooltip");
+
+    d3.select(container).append("h3")
+      .style("class", "venntitle")
+      .style("text-align", "center")
+      .style("width", width + "px")
+      .html("Distribution of IPCC authors among the 3 working groups<br/>across assessment reports");
     d3.select(container).style("text-align", "center");
     [1,2,3,4,5].forEach(function(i) {
       var id = "AR-" + i;
@@ -27,7 +46,13 @@
         div.style("clear", "both")
           .style("margin-left", width/6);
       }
-      venn.display_data("#" + id, venn.AR_data[id], width/3, height/2);
+      div.append("div").attr("class", "venn");
+      div.append("h3")
+        .style("class", "venntitle")
+        .style("text-align", "center")
+        .style("width", width/3 + "px")
+        .text(venn.AR_data["years"][id]);
+     venn.display_data("#" + id + " .venn", venn.AR_data[id], width/3, height/2);
     });
   };
 
@@ -39,13 +64,14 @@
       width, height
     );
       
-    diagram.circles.style("fill-opacity", .2)
+    diagram.circles
       .style("stroke", function(d) { return d.color; })
       .style("stroke-width", 3)
       .style("stroke-opacity", .4)
       .style("fill", function(d) { return d.color; })
-      .style("fill-opacity", .8);
-    diagram.text.style("fill", "#111")
+      .style("fill-opacity", 1);
+    diagram.text
+      .style("fill", "#111")
       .style("font-family", "Arial")
       .style("font-size", "12px");
 
@@ -67,9 +93,10 @@
     d3.selection.prototype.showTooltip = function(d) {
       this.transition().style("opacity", .9);
       return this.html("<b>" +
-        d.label.replace("WG", "Working Group")
+        d.id.replace("WG", "Working Group")
           .replace(/&/g, "&nbsp;&amp;&nbsp;") +
-        "</b><br/>" + d.size + " contributors");
+        (d.label ? ": " + d.label : "") + "</b><br/>" +
+        d.size + " contributors");
     };
     d3.selection.prototype.hideTooltip = function() {
       return this.transition().style("opacity", 0);
@@ -79,27 +106,22 @@
         .style("top", (d3.event.pageY - 36) + "px");
     };
     
-
-    // add a tooltip showing the size of each set/intersection
-    var tooltip = d3.select("body")
-      .append("div")
-      .attr("class", "venntooltip");
-
     // hover on all the circles
     diagram.nodes
       .on("mouseover", function(d, i) {
+        console.log(d);
         d3.select(this).select("circle")
-          .moveParentToFront()
-          .highlight(1)
-        tooltip.showTooltip(d);
+          .moveParentToFront();
+      //    .highlight(1)
+        venn.tooltip.showTooltip(d);
       })
       .on("mouseout", function(d, i) {
-        d3.select(this).select("circle")
-          .unhighlight(.8);
-        tooltip.hideTooltip();
+        //d3.select(this).select("circle")
+        //  .unhighlight(1);
+        venn.tooltip.hideTooltip();
       })
       .on("mousemove", function(){
-        tooltip.moveTooltip();
+        venn.tooltip.moveTooltip();
       });
     
     // draw a path around each intersection area, add hover there as well
@@ -112,18 +134,18 @@
           return data["sets"][j];
        })); 
       })
-      .style("fill-opacity", .8)
+      .style("fill-opacity", 1)
       .style("fill", function(d) { return d.color;})
       .on("mouseover", function(d, i) {
-        d3.select(this).highlight(1);
-        tooltip.showTooltip(d);
+        //d3.select(this).highlight(1);
+        venn.tooltip.showTooltip(d);
       })
       .on("mouseout", function(d, i) {
-        d3.select(this).unhighlight(0.8);
-        tooltip.hideTooltip();
+        //d3.select(this).unhighlight(1);
+        venn.tooltip.hideTooltip();
       })
       .on("mousemove", function() {
-        tooltip.moveTooltip();
+        venn.tooltip.moveTooltip();
       })
     };
 
