@@ -27,7 +27,7 @@
 
     context.font = 'bold ' + (settings('fontStyle') ? settings('fontStyle') + ' ' : '') +
       fontSize + 'px ' + settings('font');
-    context.fillStyle = '#888';
+    context.fillStyle = node.attributes.color;
 
     // Split lines and center
     function measure(string) {
@@ -46,21 +46,6 @@
         Math.round(node[prefix + 'y']) + (i * fontSize)
       );
     });
-
-    // DEBUG
-    // context.fillStyle = node.color || settings('defaultNodeColor');
-    // context.beginPath();
-    // context.arc(
-    //   node[prefix + 'x'],
-    //   node[prefix + 'y'],
-    //   node[prefix + 'size'],
-    //   0,
-    //   Math.PI * 2,
-    //   true
-    // );
-
-    context.closePath();
-    context.fill();
   };
 
   sigma.canvas.hovers.clusterLabel = Function.prototype;
@@ -154,6 +139,8 @@
         singleHover: true,
         minNodeSize: 4,
         maxNodeSize: 15,
+        minEdgeSize: 0.5,
+        maxEdgeSize: 10,
         labelSize: 'proportional',
         labelSizeRatio: 1.2
       }
@@ -194,6 +181,7 @@
 
       self.sig.graph.edges().forEach(function(e) {
         e.color = '#ddd';
+        e.size = e.weigth;
       });
 
       // Refreshing view
