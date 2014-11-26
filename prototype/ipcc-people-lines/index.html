@@ -1,0 +1,14 @@
+<style type="text/css">
+#container {
+  height: 700px;
+}
+</style>
+<div id="container"></div>
+<script src="lib/d3.min.js"></script>
+<script src="people-lines.js"></script>
+<script type="text/javascript">
+  var viz = new IPCCPeopleLines();
+  viz.load('data/participations.csv', function() {
+    viz.draw('#container');
+  });
+</script>
