@@ -39,6 +39,10 @@
     }).bind(this));
   };
 
+  Viz.tooltip = d3.select("body")
+      .append("div")
+      .attr("class", "linestooltip");
+
   Viz.prototype.load_country = function(country, callback) {
     if (!this.countries)
       throw Error('IPCCPeopleLines.load_country: countries data was not loaded.');
@@ -159,6 +163,23 @@
           })
           .attr('stroke', function(d) {
             return d['ar' + ar].total ? y(d['ar' + ar].total) : '#ccc';
+          })
+          .filter(function(d) {
+            return d['ar' + ar].total;
+          })
+          .on('mouseover', function(d) {
+            Viz.tooltip.transition().style("opacity", .9);
+            return Viz.tooltip.html(
+              "<h3>" + d.name + "</h3>" +
+              "<p><b>" + d.institution + "</b></p>"
+            );
+          })
+          .on("mouseout", function(d) {
+            return Viz.tooltip.transition().style("opacity", 0);
+          })
+          .on("mousemove", function(d) {
+            return Viz.tooltip.style("opacity", .9).style("left", (d3.event.pageX - Viz.tooltip.style("width").replace("px", "")/2) + "px")
+              .style("top", (d3.event.pageY + 40) + "px");
           });
     }, this);
   };
