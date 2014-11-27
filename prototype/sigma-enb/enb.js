@@ -126,6 +126,22 @@
     return label.trim().toLowerCase();
   }
 
+  function muteNode(node) {
+    node.color = '#ddd';
+  }
+
+  function unmuteNode(node) {
+    node.color = node.attributes.color;
+  }
+
+  function muteEdge(edge) {
+    edge.hidden = true;
+  }
+
+  function unmuteEdge(edge) {
+    delete edge.hidden;
+  }
+
   /**
    * Abstract
    */
@@ -193,8 +209,38 @@
       self.sig.bind('clickNode', function(e) {
         var k = fuzzyLabel(e.data.node.label);
 
+        // Neighborhood
+        var neighbors = self.sig.graph.neighborhood(e.data.node.id),
+            nextNodes = neighbors.nodes.map(function(n) {return n.id;}),
+            nextEdges = neighbors.edges.map(function(e) {return e.id;});
+
+        self.sig.graph.nodes().forEach(function(node) {
+          if (~nextNodes.indexOf(node.id))
+            unmuteNode(node);
+          else
+            muteNode(node);
+        });
+
+        self.sig.graph.edges().forEach(function(edge) {
+          if (~nextEdges.indexOf(edge.id))
+            unmuteEdge(edge)
+          else
+            muteEdge(edge);
+        });
+
         if (typeof self.onNodeClick === 'function')
           self.onNodeClick(k, self.index[k]);
+
+        self.sig.refresh();
+      });
+
+      self.sig.bind('clickStage', function(e) {
+        if (e.data.captor.isDragging)
+          return;
+
+        self.sig.graph.nodes().forEach(unmuteNode);
+        self.sig.graph.edges().forEach(unmuteEdge);
+        self.sig.refresh();
       });
 
       // Size
