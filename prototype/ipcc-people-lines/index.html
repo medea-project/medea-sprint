@@ -1,15 +1,30 @@
 <style type="text/css">
-#container {
-  height: 700px;
-}
 </style>
+<div>
+  <select id="choice"></select>
+</div>
 <div id="container"></div>
 <script src="lib/d3.min.js"></script>
 <script src="people-lines.js"></script>
 <script type="text/javascript">
   var viz = new IPCCPeopleLines();
   viz.load_countries('data/countries.json', function() {
+
     // populate dropdown list of countries
+    var select = document.querySelector('#choice'),
+        opts = '';
+
+    for (var c in viz.countries)
+      opts += '<option ' + (c === viz.defaultCountry ? 'selected="selected" ' : '') + 'value="' + c + '">' + c + '</option>\n';
+
+    select.innerHTML = opts;
+
+    select.onchange = function(e) {
+      viz.load_country(select.value, function() {
+        viz.draw_country('#container', select.value);
+      });
+    };
+
     var country = viz.defaultCountry;
     viz.load_country(country, function() {
       viz.draw_country("#container", country)

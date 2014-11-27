@@ -66,16 +66,25 @@
     var data = this.data[this.countries[country]],
         width = w || this.defaultWidth,
         lineSpace = this.lineWidth + this.lineMargin,
-        arWidth = width / 10;
+        arWidth = width / 9;
 
     var y = d3.scale.linear()
       .domain([1, 5])
       .range(['yellow', 'red']);
 
-    var chart = d3.select(container)
-      .append('svg')
+    var chart;
+    if (d3.select(container).select('svg').empty()) {
+      chart = d3.select(container)
+        .append('svg')
+          .attr('width', width)
+          .attr('height', Object.keys(data).length * (lineSpace));
+    }
+    else {
+      chart = d3.select(container).select('svg')
         .attr('width', width)
         .attr('height', Object.keys(data).length * (lineSpace));
+      chart.selectAll('g').remove();
+    }
 
     data.sort(function(a,b) {
         return a.total_ars - b.total_ars;
@@ -101,8 +110,8 @@
     [1, 2, 3, 4, 5].forEach(function(ar, ari) {
       var subline = group
         .append('line')
-          .attr('x1', arWidth * (2*ari - 1))
-          .attr('x2', arWidth * (2*ari))
+          .attr('x1', arWidth * (2*ari))
+          .attr('x2', arWidth * (2*ari + 1))
           .attr('y1', function(d, i) {
             return i * lineSpace;
           })
