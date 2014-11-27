@@ -31,6 +31,7 @@
   Viz.prototype.load_countries = function(path, callback) {
     d3.json(path, (function(data) {
       this.countries = data;
+      this.listCountries = Object.keys(data).sort();
       if (typeof callback === 'function')
         callback();
     }).bind(this));

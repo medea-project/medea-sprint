@@ -14,8 +14,9 @@
     var select = document.querySelector('#choice'),
         opts = '';
 
-    for (var c in viz.countries)
+    viz.listCountries.forEach(function(c) {
       opts += '<option ' + (c === viz.defaultCountry ? 'selected="selected" ' : '') + 'value="' + c + '">' + c + '</option>\n';
+    });
 
     select.innerHTML = opts;
 
