@@ -19,6 +19,7 @@
     this.data = {};
 
     this.defaultCountry = "France";
+    this.defaultSort = "participation";
     this.defaultWidth = 700;
     this.lineWidth = 2;
     this.lineMargin = 1;
@@ -56,7 +57,7 @@
     }).bind(this));
   };
 
-  Viz.prototype.draw_country = function(container, country, w) {
+  Viz.prototype.draw_country = function(container, country, w, sort) {
     if (!this.countries)
       throw Error('IPCCPeopleLines.draw: countries data was not loaded.');
     if (!this.countries[country])
@@ -65,6 +66,7 @@
       throw Error('IPCCPeopleLines.draw: country data was not loaded.');
 
     var data = this.data[this.countries[country]],
+        sorting = sort || this.defaultSort,
         width = w || this.defaultWidth,
         lineSpace = this.lineWidth + this.lineMargin,
         arWidth = width / 9;
@@ -78,17 +80,27 @@
       chart = d3.select(container)
         .append('svg')
           .attr('width', width)
-          .attr('height', Object.keys(data).length * (lineSpace));
+          .attr('height', data.length * (lineSpace));
     }
     else {
       chart = d3.select(container).select('svg')
         .attr('width', width)
-        .attr('height', Object.keys(data).length * (lineSpace));
+        .attr('height', data.length * (lineSpace));
       chart.selectAll('g').remove();
     }
 
     data.sort(function(a,b) {
+      if (sorting === "chrono") {
+        if (a.first_ar != b.first_ar)
+          return a.first_ar - b.first_ar;
         return a.total_ars - b.total_ars;
+      } else if (sorting === "participation") {
+        if (a.total_ars != b.total_ars)
+            return a.total_ars - b.total_ars;
+        return a.first_ar - b.first_ar;
+      } else if (sorting === "alpha") {
+        return a.name.localeCompare(b.name);
+      }
     });
 
     var group = chart.selectAll('.lines')
