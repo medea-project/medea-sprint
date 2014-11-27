@@ -83,20 +83,6 @@
       .domain([0, maxParticipations])
       .range(['yellow', 'green']);
 
-    var chart;
-    if (d3.select(container).select('svg').empty()) {
-      chart = d3.select(container)
-        .append('svg')
-          .attr('width', width)
-          .attr('height', data.length * (lineSpace));
-    }
-    else {
-      chart = d3.select(container).select('svg')
-        .attr('width', width)
-        .attr('height', data.length * (lineSpace));
-      chart.selectAll('g').remove();
-    }
-
     data.sort(function(a,b) {
       if (sorting === "chrono") {
         if (a.first_ar != b.first_ar)
@@ -121,13 +107,28 @@
       }
     });
 
-    var curY = 0
+    var curY = 0,
+        height = 10;
     data.forEach(function(d) {
       var wid = lineWidth * d.total_ars
+      height += wid + lineMargin;
       d.y1 = curY + lineMargin + wid/2;
       curY = d.y1 + wid/2;
-      d.total_part = d.ar1.total + d.ar2.total + d.ar3.total + d.ar4.total + d.ar5.total
     });
+
+    var chart;
+    if (d3.select(container).select('svg').empty()) {
+      chart = d3.select(container)
+        .append('svg')
+          .attr('width', width)
+          .attr('height', height);
+    }
+    else {
+      chart = d3.select(container).select('svg')
+        .attr('width', width)
+        .attr('height', height);
+      chart.selectAll('g').remove();
+    }
 
     var group = chart.selectAll('.lines')
       .data(data)
