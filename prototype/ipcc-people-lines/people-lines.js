@@ -20,10 +20,10 @@
     this.data = {};
 
     this.defaultCountry = "France";
-    this.defaultSort = "chrono";
+    this.defaultSort = "participation";
     this.defaultWidth = 700;
-    this.lineWidth = 2;
-    this.lineMargin = 1;
+    this.lineWidth = 5;
+    this.lineMargin = 15;
   }
 
 
@@ -69,14 +69,19 @@
     var data = this.data[this.countries[country]],
         sorting = sort || this.defaultSort,
         width = w || this.defaultWidth,
-        lineWidth = this.lineWidth * (data.length < 50 ? 3 : 1),
-        lineMargin = this.lineMargin * (data.length < 50 ? 3 : 1),
+        lineWidth = this.lineWidth,
+        lineMargin = this.lineMargin,
         lineSpace = lineWidth + lineMargin,
-        arWidth = width / 9;
+        arWidth = 3 * width / 20,
+        maxParticipations = d3.max(data.map(function(d) {
+          return [d.ar1.total, d.ar2.total, d.ar3.total, d.ar4.total, d.ar5.total];
+        }).reduce(function(a, b) {
+          return a.concat(b);
+        }, []));
 
     var y = d3.scale.linear()
-      .domain([1, 5])
-      .range(['yellow', 'red']);
+      .domain([0, maxParticipations])
+      .range(['yellow', 'green']);
 
     var chart;
     if (d3.select(container).select('svg').empty()) {
@@ -96,47 +101,63 @@
       if (sorting === "chrono") {
         if (a.first_ar != b.first_ar)
           return a.first_ar - b.first_ar;
-        return a.total_ars - b.total_ars;
-      } else if (sorting === "participation") {
+        if (a.total_part != b.total_part)
+          return b.total_part - a.total_part;
+        return b.total_ars - a.total_ars;
+      } else if (sorting === "participations") {
+        if (a.total_part != b.total_part)
+          return b.total_part - a.total_part;
         if (a.total_ars != b.total_ars)
-            return a.total_ars - b.total_ars;
+          return b.total_ars - a.total_ars;
+        return a.first_ar - b.first_ar;
+      } else if (sorting === "reports") {
+        if (a.total_ars != b.total_ars)
+          return b.total_ars - a.total_ars;
+        if (a.total_part != b.total_part)
+          return b.total_part - a.total_part;
         return a.first_ar - b.first_ar;
       } else if (sorting === "alpha") {
         return a.name.localeCompare(b.name);
       }
     });
 
+    var curY = 0
+    data.forEach(function(d) {
+      var wid = lineWidth * d.total_ars
+      d.y1 = curY + lineMargin + wid/2;
+      curY = d.y1 + wid/2;
+      d.total_part = d.ar1.total + d.ar2.total + d.ar3.total + d.ar4.total + d.ar5.total
+    });
+
     var group = chart.selectAll('.lines')
       .data(data)
       .enter().append('g');
-
-    var line = group
-      .append('line')
-        .attr('x1', 0)
-        .attr('x2', width)
-        .attr('y1', function(d, i) {
-          return i * lineSpace;
-        })
-        .attr('y2', function(d, i) {
-          return i * lineSpace;
-        })
-        .attr('stroke-width', lineWidth)
-        .attr('stroke', '#ccc');
+    var text = group.append('text')
+      .attr('x', width / 4 - 5)
+      .attr('y', function(d) {
+        return d.y1 + 5;
+       })
+      .attr('text-anchor', 'end')
+      .text(function(d) {
+        return d.name;
+      });
 
     [1, 2, 3, 4, 5].forEach(function(ar, ari) {
       var subline = group
         .append('line')
-          .attr('x1', arWidth * (2*ari))
-          .attr('x2', arWidth * (2*ari + 1))
+          .attr('x1', width / 4 + arWidth * (ari))
+          .attr('x2', width / 4 + arWidth * (ari + 1))
           .attr('y1', function(d, i) {
-            return i * lineSpace;
+            return d.y1;
           })
           .attr('y2', function(d, i) {
-            return i * lineSpace;
+            return d.y1;
           })
-          .attr('stroke-width', lineWidth)
+          .attr('stroke-width', function(d) {
+            return d['ar' + ar].total ? lineWidth * d.total_ars : 1;
+          })
           .attr('stroke', function(d) {
-            return +d['ar' + ar].total ? y(d.total_ars) : '#ccc';
+            return d['ar' + ar].total ? y(d['ar' + ar].total) : '#ccc';
           });
     }, this);
   };
