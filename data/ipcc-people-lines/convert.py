@@ -34,6 +34,7 @@ with open("participations.csv") as f:
               "name": l["Author (INFO)"],
               "institution": clean(l["Institution (INFO)"]),
               "department": clean(l["Department (INFO)"]),
+              "total_ars": 0,
               "ar1": {
                 "total": 0,
                 "participations": []
@@ -56,6 +57,8 @@ with open("participations.csv") as f:
               }
             }
         arid = "ar%s" % l["ar"]
+        if not countries[cnt][l["author_id"]][arid]["total"]:
+            countries[cnt][l["author_id"]]["total_ars"] += 1
         countries[cnt][l["author_id"]][arid]["total"] += 1
         countries[cnt][l["author_id"]][arid]["participations"].append({
             "role": roles[l["role"]],
