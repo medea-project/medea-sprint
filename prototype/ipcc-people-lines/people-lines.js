@@ -20,7 +20,7 @@
     this.data = {};
 
     this.defaultCountry = "France";
-    this.defaultSort = "participation";
+    this.defaultSort = "chrono";
     this.defaultWidth = 700;
     this.lineWidth = 2;
     this.lineMargin = 1;
