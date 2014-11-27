@@ -35,6 +35,7 @@ with open("participations.csv") as f:
               "institution": clean(l["Institution (INFO)"]),
               "department": clean(l["Department (INFO)"]),
               "total_ars": 0,
+              "total_part": 0,
               "first_ar": 0,
               "ar1": {
                 "total": 0,
@@ -60,6 +61,7 @@ with open("participations.csv") as f:
         arid = "ar%s" % l["ar"]
         if not countries[cnt][l["author_id"]]["first_ar"]:
             countries[cnt][l["author_id"]]["first_ar"] = int(l["ar"])
+        countries[cnt][l["author_id"]]["total_part"] += 1
         if not countries[cnt][l["author_id"]][arid]["total"]:
             countries[cnt][l["author_id"]]["total_ars"] += 1
         countries[cnt][l["author_id"]][arid]["total"] += 1
