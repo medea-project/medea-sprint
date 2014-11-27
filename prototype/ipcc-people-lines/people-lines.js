@@ -15,10 +15,11 @@
   function Viz() {
 
     // Properties
-    this.data = null;
-    this.defaultWidth = 700;
-    // this.defaultHeight = 500;
+    this.countries = null;
+    this.data = {};
 
+    this.defaultCountry = "France";
+    this.defaultWidth = 700;
     this.lineWidth = 2;
     this.lineMargin = 1;
   }
@@ -27,41 +28,61 @@
   /**
    * Prototype
    */
-  Viz.prototype.load = function(path, callback) {
-    d3.csv(path, (function(data) {
-      this.data = data;
+  Viz.prototype.load_countries = function(path, callback) {
+    d3.json(path, (function(data) {
+      this.countries = data;
       if (typeof callback === 'function')
         callback();
     }).bind(this));
   };
 
-  // NOTE: height is not relevant
-  Viz.prototype.draw = function(container, w, h) {
-    if (!this.data)
-      throw Error('IPCCPeopleLines.draw: data was not loaded.');
+  Viz.prototype.load_country = function(country, callback) {
+    if (!this.countries)
+      throw Error('IPCCPeopleLines.load_country: countries data was not loaded.');
+    if (!this.countries[country])
+      throw Error('IPCCPeopleLines.load_country: country missing from countries data.');
+    // Avoid reloading pre-cached country data
+    if (this.data[this.countries[country]]) {
+      if (typeof callback === 'function')
+        return callback();
+      return;
+    }
+    var path = "data/ipcc-people-participations-" + this.countries[country] + ".json";
+    d3.json(path, (function(data) {
+      this.data[this.countries[country]] = data;
+      if (typeof callback === 'function')
+        callback();
+    }).bind(this));
+  };
 
-    var width = w || this.defaultWidth,
-        height = h || this.defaultHeight,
+  Viz.prototype.draw_country = function(container, country, w) {
+    if (!this.countries)
+      throw Error('IPCCPeopleLines.draw: countries data was not loaded.');
+    if (!this.countries[country])
+      throw Error('IPCCPeopleLines.draw: country missing from countries data.');
+    if (!this.data[this.countries[country]])
+      throw Error('IPCCPeopleLines.draw: country data was not loaded.');
+
+    var data = this.data[this.countries[country]],
+        width = w || this.defaultWidth,
         lineSpace = this.lineWidth + this.lineMargin,
-        arWidth = width / 5;
-
-    var maxParticipations = d3.max(this.data.map(function(d) {
-      return [d.ar1, d.ar2, d.ar3, d.ar4, d.ar5];
-    }).reduce(function(a, b) {
-      return a.concat(b);
-    }, []));
+        arWidth = width / 10;
 
     var y = d3.scale.linear()
-      .domain([0, maxParticipations])
+      .domain([1, 5])
       .range(['yellow', 'red']);
 
     var chart = d3.select(container)
       .append('svg')
         .attr('width', width)
-        .attr('height', this.data.length * (lineSpace));
+        .attr('height', Object.keys(data).length * (lineSpace));
+
+    data.sort(function(a,b) {
+        return a.total_ars - b.total_ars;
+    });
 
     var group = chart.selectAll('.lines')
-      .data(this.data)
+      .data(data)
       .enter().append('g');
 
     var line = group
@@ -80,8 +101,8 @@
     [1, 2, 3, 4, 5].forEach(function(ar, ari) {
       var subline = group
         .append('line')
-          .attr('x1', arWidth * ari)
-          .attr('x2', arWidth * ari + arWidth)
+          .attr('x1', arWidth * (2*ari - 1))
+          .attr('x2', arWidth * (2*ari))
           .attr('y1', function(d, i) {
             return i * lineSpace;
           })
@@ -90,7 +111,7 @@
           })
           .attr('stroke-width', this.lineWidth)
           .attr('stroke', function(d) {
-            return +d['ar' + ar] ? y(+d['ar' + ar]) : '#ccc';
+            return +d['ar' + ar].total ? y(d.total_ars) : '#ccc';
           });
     }, this);
   };

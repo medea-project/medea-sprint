@@ -8,7 +8,11 @@
 <script src="people-lines.js"></script>
 <script type="text/javascript">
   var viz = new IPCCPeopleLines();
-  viz.load('data/participations.csv', function() {
-    viz.draw('#container');
+  viz.load_countries('data/countries.json', function() {
+    // populate dropdown list of countries
+    var country = viz.defaultCountry;
+    viz.load_country(country, function() {
+      viz.draw_country("#container", country)
+    });
   });
 </script>
