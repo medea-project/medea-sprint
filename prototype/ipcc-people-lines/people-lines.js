@@ -16,6 +16,7 @@
 
     // Properties
     this.countries = null;
+    this.listCountries = null;
     this.data = {};
 
     this.defaultCountry = "France";
@@ -57,7 +58,7 @@
     }).bind(this));
   };
 
-  Viz.prototype.draw_country = function(container, country, w, sort) {
+  Viz.prototype.draw_country = function(container, country, sort, w) {
     if (!this.countries)
       throw Error('IPCCPeopleLines.draw: countries data was not loaded.');
     if (!this.countries[country])
