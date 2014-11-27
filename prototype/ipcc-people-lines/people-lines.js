@@ -1,6 +1,10 @@
 ;(function(undefined) {
   'use strict';
 
+  var cleantext = function(text) {
+    return text.replace(/ /g, "&nbsp;");
+  };
+
   /**
    * IPCC People Lines Viz
    * ======================
@@ -169,16 +173,24 @@
           })
           .on('mouseover', function(d) {
             Viz.tooltip.transition().style("opacity", .9);
+            var contribs = "";
+            d['ar' + ar].participations.forEach(function(p) {
+              contribs += "<li>" + p.role + " for WG " + p.wg +
+                " on chapter " + p.chapter + " (" + p.chapter_title + ")</li>";
+            });
             return Viz.tooltip.html(
-              "<h3>" + d.name + "</h3>" +
-              "<p><b>" + d.institution + "</b></p>"
+              "<h3>" + cleantext(d.name) + " (AR #" + ar + ")</h3>" +
+              "<p><b>" + cleantext(d.institution) + "</b></p>" +
+              "<ul>" + cleantext(contribs) + "</ul>"
             );
           })
           .on("mouseout", function(d) {
             return Viz.tooltip.transition().style("opacity", 0);
           })
           .on("mousemove", function(d) {
-            return Viz.tooltip.style("opacity", .9).style("left", (d3.event.pageX - Viz.tooltip.style("width").replace("px", "")/2) + "px")
+            return Viz.tooltip
+              .style("left", (d3.event.pageX -
+                Viz.tooltip.style("width").replace("px", "")/2) + "px")
               .style("top", (d3.event.pageY + 40) + "px");
           });
     }, this);
