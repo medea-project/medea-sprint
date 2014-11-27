@@ -66,11 +66,11 @@ with open("participations.csv") as f:
 
 if not os.path.isdir("countries"):
     os.makedirs("countries")
-with open(os.path.join("countries", "list.json"), "w") as f:
+with open(os.path.join("countries", "countries.json"), "w") as f:
     for k,v in countrycodes.items():
         if v not in countries or not countries[v]:
             del(countrycodes[k])
     json.dump(countrycodes, f)
 for c in countries:
     with open(os.path.join("countries", "ipcc-people-participations-%s.json" % c), "w") as f:
-        json.dump(countries[c], f)
+        json.dump(countries[c].values(), f)
