@@ -45,10 +45,14 @@
         lineSpace = this.lineWidth + this.lineMargin,
         arWidth = width / 5;
 
+    var maxParticipations = d3.max(this.data.map(function(d) {
+      return [d.ar1, d.ar2, d.ar3, d.ar4, d.ar5];
+    }).reduce(function(a, b) {
+      return a.concat(b);
+    }, []));
+
     var y = d3.scale.linear()
-      // .domain([0, d3.max(this.data.map(function(d) {
-      //   return [d.ar1, d.ar]
-      // }))])
+      .domain([0, maxParticipations])
       .range(['yellow', 'red']);
 
     var chart = d3.select(container)
@@ -86,7 +90,7 @@
           })
           .attr('stroke-width', this.lineWidth)
           .attr('stroke', function(d) {
-            return +d['ar' + ar] ? 'red' : '#ccc';
+            return +d['ar' + ar] ? y(+d['ar' + ar]) : '#ccc';
           });
     }, this);
   };
