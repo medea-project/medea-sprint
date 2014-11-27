@@ -133,6 +133,7 @@
     var self = this;
 
     // Properties
+    this.index = null;
     this.size = 0;
     this.sig = new sigma({
       settings: {
@@ -158,12 +159,13 @@
    * Prototype
    */
 
-  // Loading the graph
-  Abstract.prototype.load = function(path, callback) {
-    var self = this;
+  // Loading the graph data and the paragraphs
+  Abstract.prototype.load = function(graphPath, indexPath, callback) {
+    var self = this,
+        count = 0;
 
     // Loading graph at init
-    sigma.parsers.gexf(path, this.sig, function() {
+    sigma.parsers.gexf(graphPath, this.sig, function() {
       var nodes = self.sig.graph.nodes();
 
       // Giving precise node types
@@ -187,6 +189,14 @@
       // Refreshing view
       self.sig.refresh();
 
+      // Binding actions
+      self.sig.bind('clickNode', function(e) {
+        var k = fuzzyLabel(e.data.node.label);
+
+        if (typeof self.onNodeClick === 'function')
+          self.onNodeClick(k, self.index[k]);
+      });
+
       // Size
       var xs = nodes.map(collect('read_cammain:x')),
           ys = nodes.map(collect('read_cammain:y')),
@@ -202,7 +212,26 @@
           );
       self.size = distance;
 
-      callback();
+      if (++count === 2)
+        callback();
+    });
+
+    d3.csv(indexPath, function(data) {
+      self.index = {};
+
+      data.forEach(function(line) {
+        var keywords = line.keywords.split('|');
+
+        keywords.forEach(function(k) {
+          if (!self.index[k]) {
+            self.index[k] = [];
+          }
+          self.index[k].push(line.paragraph);
+        });
+      });
+
+      if (++count === 2)
+        callback();
     });
   };
 
