@@ -24,10 +24,7 @@
         viz.draw_country('#container', select.value);
       });
     };
+    select.onchange();
 
-    var country = viz.defaultCountry;
-    viz.load_country(country, function() {
-      viz.draw_country("#container", country)
-    });
   });
 </script>
