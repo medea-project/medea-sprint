@@ -68,7 +68,9 @@
     var data = this.data[this.countries[country]],
         sorting = sort || this.defaultSort,
         width = w || this.defaultWidth,
-        lineSpace = this.lineWidth + this.lineMargin,
+        lineWidth = this.lineWidth * (data.length < 50 ? 3 : 1),
+        lineMargin = this.lineMargin * (data.length < 50 ? 3 : 1),
+        lineSpace = lineWidth + lineMargin,
         arWidth = width / 9;
 
     var y = d3.scale.linear()
@@ -117,7 +119,7 @@
         .attr('y2', function(d, i) {
           return i * lineSpace;
         })
-        .attr('stroke-width', this.lineWidth)
+        .attr('stroke-width', lineWidth)
         .attr('stroke', '#ccc');
 
     [1, 2, 3, 4, 5].forEach(function(ar, ari) {
@@ -131,7 +133,7 @@
           .attr('y2', function(d, i) {
             return i * lineSpace;
           })
-          .attr('stroke-width', this.lineWidth)
+          .attr('stroke-width', lineWidth)
           .attr('stroke', function(d) {
             return +d['ar' + ar].total ? y(d.total_ars) : '#ccc';
           });
