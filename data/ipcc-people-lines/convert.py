@@ -12,6 +12,8 @@ roles = {
 
 chapter_id = lambda l: "%s-%s-%s" % (l["ar"], l["wg"], l.get("chapter", l.get("number", None)))
 
+clean = lambda t: t if t != "NULL" else None
+
 chaptitles = {}
 with open("chapters.csv") as f:
     for l in csv.DictReader(f):
@@ -30,8 +32,8 @@ with open("participations.csv") as f:
         if l["author_id"] not in countries[cnt]:
             countries[cnt][l["author_id"]] = {
               "name": l["Author (INFO)"],
-              "institution": l["Institution (INFO)"],
-              "department": l["Department (INFO)"],
+              "institution": clean(l["Institution (INFO)"]),
+              "department": clean(l["Department (INFO)"]),
               "ar1": {
                 "total": 0,
                 "participations": []
@@ -62,8 +64,12 @@ with open("participations.csv") as f:
             "chapter_title": chaptitles[chapter_id(l)]
         })
 
-os.makedirs("countries")
+if not os.path.isdir("countries"):
+    os.makedirs("countries")
 with open(os.path.join("countries", "list.json"), "w") as f:
+    for k,v in countrycodes.items():
+        if v not in countries or not countries[v]:
+            del(countrycodes[k])
     json.dump(countrycodes, f)
 for c in countries:
     with open(os.path.join("countries", "ipcc-people-participations-%s.json" % c), "w") as f:
