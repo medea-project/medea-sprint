@@ -229,7 +229,7 @@
         });
 
         if (typeof self.onNodeClick === 'function')
-          self.onNodeClick(k, self.index[k]);
+          self.onNodeClick(k, self.index[k] || []);
 
         self.sig.refresh();
       });
