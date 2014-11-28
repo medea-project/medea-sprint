@@ -12,3 +12,7 @@ https://raw.githubusercontent.com/medea-project/ipcc-database/master/data/partic
 * sigma.parsers.gexf.js
 * sigma.plugins.neighborhood.js
 * d3.js
+
+*Note*
+
+This place is no longer maintained. MOVED to the website.
