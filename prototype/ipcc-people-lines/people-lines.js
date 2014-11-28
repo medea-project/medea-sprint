@@ -26,8 +26,8 @@
     this.defaultCountry = "France";
     this.defaultSort = "participation";
     this.defaultWidth = 700;
-    this.lineWidth = 5;
-    this.lineMargin = 15;
+    this.lineWidth = 10;
+    this.lineMargin = 8;
   }
 
 
@@ -79,8 +79,7 @@
         width = w || this.defaultWidth,
         lineWidth = this.lineWidth,
         lineMargin = this.lineMargin,
-        lineSpace = lineWidth + lineMargin,
-        arWidth = 3 * width / 20,
+        arWidth = 4 * width / 25,
         maxParticipations = d3.max(data.map(function(d) {
           return [d.ar1.total, d.ar2.total, d.ar3.total, d.ar4.total, d.ar5.total];
         }).reduce(function(a, b) {
@@ -118,10 +117,22 @@
     var curY = 0,
         height = 10;
     data.forEach(function(d) {
-      var wid = lineWidth * d.total_ars
+      var wid = lineWidth + d.total_ars;
       height += wid + lineMargin;
       d.y1 = curY + lineMargin + wid/2;
       curY = d.y1 + wid/2;
+      
+      [1,2,3,4,5].forEach(function(ar) {
+        var contribs = "";
+        d['ar' + ar].participations.forEach(function(p) {
+          contribs += "<li>" + p.role + " for WG " + p.wg +
+            " on chapter " + p.chapter + " (" + p.chapter_title + ")</li>";
+        });
+        d["tooltip" + ar] =
+          "<h3>" + cleantext(d.name) + " (AR #" + ar + ")</h3>" +
+          "<p><b>" + cleantext(d.institution) + "</b></p>" +
+          "<ul>" + cleantext(contribs) + "</ul>";
+      });
     });
 
     var chart;
@@ -141,12 +152,14 @@
     var group = chart.selectAll('.lines')
       .data(data)
       .enter().append('g');
+
     var text = group.append('text')
-      .attr('x', width / 4 - 5)
+      .attr('x', width / 5 - 5)
       .attr('y', function(d) {
         return d.y1 + 5;
        })
       .attr('text-anchor', 'end')
+      .style('font-size', '10px')
       .text(function(d) {
         return d.name;
       });
@@ -154,8 +167,8 @@
     [1, 2, 3, 4, 5].forEach(function(ar, ari) {
       var subline = group
         .append('line')
-          .attr('x1', width / 4 + arWidth * (ari))
-          .attr('x2', width / 4 + arWidth * (ari + 1))
+          .attr('x1', width / 5 + arWidth * (ari))
+          .attr('x2', width / 5 + arWidth * (ari + 1))
           .attr('y1', function(d, i) {
             return d.y1;
           })
@@ -163,7 +176,7 @@
             return d.y1;
           })
           .attr('stroke-width', function(d) {
-            return d['ar' + ar].total ? lineWidth * d.total_ars : 1;
+            return d['ar' + ar].total ? lineWidth + d.total_ars : 1;
           })
           .attr('stroke', function(d) {
             return d['ar' + ar].total ? y(d['ar' + ar].total) : '#ccc';
@@ -172,25 +185,18 @@
             return d['ar' + ar].total;
           })
           .on('mouseover', function(d) {
-            Viz.tooltip.transition().style("opacity", .9);
-            var contribs = "";
-            d['ar' + ar].participations.forEach(function(p) {
-              contribs += "<li>" + p.role + " for WG " + p.wg +
-                " on chapter " + p.chapter + " (" + p.chapter_title + ")</li>";
-            });
-            return Viz.tooltip.html(
-              "<h3>" + cleantext(d.name) + " (AR #" + ar + ")</h3>" +
-              "<p><b>" + cleantext(d.institution) + "</b></p>" +
-              "<ul>" + cleantext(contribs) + "</ul>"
-            );
+            return Viz.tooltip.html(d["tooltip" + ar])
+              .transition().style("opacity", .9);
           })
+          .on('mouseenter', this.onmouseover)
           .on("mouseout", function(d) {
             return Viz.tooltip.transition().style("opacity", 0);
           })
           .on("mousemove", function(d) {
+            Viz.tooltip.style("opacity", .9);
+            var wid = Viz.tooltip.style("width").replace("px", "")/2;
             return Viz.tooltip
-              .style("left", (d3.event.pageX -
-                Viz.tooltip.style("width").replace("px", "")/2) + "px")
+              .style("left", Math.max(0, (d3.event.pageX - wid)) + "px")
               .style("top", (d3.event.pageY + 40) + "px");
           });
     }, this);
