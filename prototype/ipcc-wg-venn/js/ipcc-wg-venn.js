@@ -51,7 +51,8 @@
         .style("class", "venntitle")
         .style("text-align", "center")
         .style("width", width/3 + "px")
-        .text(venn.AR_data["years"][id]);
+        .style("font-size", "16px")
+        .text("AR #" + i + " (" + venn.AR_data["years"][id] + ")");
      venn.display_data("#" + id + " .venn", venn.AR_data[id], width/3, height/2);
     });
   };
@@ -80,48 +81,38 @@
         this.parentNode.parentNode.appendChild(this.parentNode);
       });
     };
-    d3.selection.prototype.highlight = function(maxop) {
-      return this.transition()
-        .style("fill-opacity", maxop)
-        .style("stroke-opacity", 1);
-    };
-    d3.selection.prototype.unhighlight = function(minop) {
-      return this.transition()
-        .style("fill-opacity", minop)
-        .style("stroke-opacity", .4);
-    };
     d3.selection.prototype.showTooltip = function(d) {
-      this.transition().style("opacity", .9);
       return this.html("<b>" +
         d.id.replace("WG", "Working Group")
           .replace(/&/g, "&nbsp;&amp;&nbsp;") +
         (d.label ? ": " + d.label : "") + "</b><br/>" +
-        d.size + " contributors");
+        d.size + " contributors")
+        .transition().style("opacity", .9);
     };
     d3.selection.prototype.hideTooltip = function() {
       return this.transition().style("opacity", 0);
     };
-    d3.selection.prototype.moveTooltip = function() {
-      return this.style("left", (d3.event.pageX) + "px")
-        .style("top", (d3.event.pageY - 36) + "px");
+    d3.selection.prototype.moveTooltip = function(d) {
+      this.style("opacity", .9);
+      var wid = this.style("width").replace("px", "")/2;
+      return this.style("left", Math.min(window.innerWidth - 2*wid - 15,
+          Math.max(0, (d3.event.pageX - wid))) + "px")
+        .style("top", (d3.event.pageY + 20) + "px");
     };
     
     // hover on all the circles
     diagram.nodes
-      .on("mouseover", function(d, i) {
-        console.log(d);
+      .on("mouseover", function(d) {
         d3.select(this).select("circle")
           .moveParentToFront();
-      //    .highlight(1)
         venn.tooltip.showTooltip(d);
       })
-      .on("mouseout", function(d, i) {
-        //d3.select(this).select("circle")
-        //  .unhighlight(1);
+      .on("mouseenter", this.onmouseover)
+      .on("mouseout", function() {
         venn.tooltip.hideTooltip();
       })
-      .on("mousemove", function(){
-        venn.tooltip.moveTooltip();
+      .on("mousemove", function(d) {
+        venn.tooltip.moveTooltip(d);
       });
     
     // draw a path around each intersection area, add hover there as well
@@ -136,16 +127,15 @@
       })
       .style("fill-opacity", 1)
       .style("fill", function(d) { return d.color;})
-      .on("mouseover", function(d, i) {
-        //d3.select(this).highlight(1);
+      .on("mouseover", function(d) {
         venn.tooltip.showTooltip(d);
       })
-      .on("mouseout", function(d, i) {
-        //d3.select(this).unhighlight(1);
+      .on("mouseenter", this.onmouseover)
+      .on("mouseout", function() {
         venn.tooltip.hideTooltip();
       })
-      .on("mousemove", function() {
-        venn.tooltip.moveTooltip();
+      .on("mousemove", function(d) {
+        venn.tooltip.moveTooltip(d);
       })
     };
 

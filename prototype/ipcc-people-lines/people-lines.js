@@ -123,15 +123,18 @@
       curY = d.y1 + wid/2;
       
       [1,2,3,4,5].forEach(function(ar) {
-        var contribs = "";
+        var metas = (d.institution && d.institution !== "N/A" ? d.institution :
+              (d.department && d.department !== "N/A" ? d.department : "")),
+            contribs = "";
+        if (metas) metas = "<p><b>" + cleantext(metas) + "</b></p>";
         d['ar' + ar].participations.forEach(function(p) {
-          contribs += "<li>" + p.role + " for WG " + p.wg +
-            " on chapter " + p.chapter + " (" + p.chapter_title + ")</li>";
+          contribs += cleantext("<li>" + p.role + " for WG " + p.wg +
+            " on chapter " + p.chapter) +
+            " (" + p.chapter_title + ")</li>";
         });
         d["tooltip" + ar] =
-          "<h3>" + cleantext(d.name) + " (AR #" + ar + ")</h3>" +
-          "<p><b>" + cleantext(d.institution) + "</b></p>" +
-          "<ul>" + cleantext(contribs) + "</ul>";
+          "<h3>" + cleantext(d.name) + " (AR #" + ar + ")</h3>" + metas +
+          "<ul>" + contribs + "</ul>";
       });
     });
 
@@ -189,15 +192,17 @@
               .transition().style("opacity", .9);
           })
           .on('mouseenter', this.onmouseover)
-          .on("mouseout", function(d) {
+          .on('mouseout', function(d) {
             return Viz.tooltip.transition().style("opacity", 0);
           })
-          .on("mousemove", function(d) {
+          .on('mousemove', function(d) {
             Viz.tooltip.style("opacity", .9);
-            var wid = Viz.tooltip.style("width").replace("px", "")/2;
+            var wid = Viz.tooltip.style("width").replace("px", "");
             return Viz.tooltip
-              .style("left", Math.max(0, (d3.event.pageX - wid)) + "px")
-              .style("top", (d3.event.pageY + 40) + "px");
+              .style("left", Math.min(window.innerWidth - wid - 20,
+                Math.max(0, (d3.event.pageX - wid/2))) + "px")
+              .style("top", (d3.event.pageY + 40) + "px")
+              .style("width", wid + "px");
           });
     }, this);
   };
