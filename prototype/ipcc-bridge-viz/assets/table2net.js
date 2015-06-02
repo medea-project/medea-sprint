@@ -2,7 +2,7 @@
 
 
     ns.buildGraph = function(table, settings){
-        
+
         // Settings
         ns.settings = settings || {}
         ns.table = table.slice(0)
@@ -14,40 +14,40 @@
 
         if(ns.settings.mode === undefined)
             ns.settings.mode = 'normal'    // 'normal', 'bipartite', 'citations', 'nolink'
-        
+
         if(ns.settings.weightEdges === undefined)
             ns.weightEdges = false
-        
+
         if( ( ns.settings.mode == 'normal' || ns.settings.mode == 'citation' || ns.settings.mode == 'nolink' ) && ns.settings.nodesColumnId === undefined)
             console.log('Table2net: nodesColumnId required for mode '+ns.settings.mode)
-        
+
         if(ns.settings.nodesSeparator === undefined)
             ns.settings.nodesSeparator = null
-        
+
         if(ns.settings.mode == 'normal'  && ns.settings.linksColumnId === undefined)
             console.log('Table2net: linksColumnId required for mode '+ns.settings.mode)
-        
+
         if(ns.settings.linksSeparator === undefined)
             ns.settings.linksSeparator = null
 
         if(ns.settings.mode == 'bipartite' && ns.settings.nodesColumnId1 === undefined)
             console.log('Table2net: nodesColumnId1 required for mode '+ns.settings.mode)
-        
+
         if(ns.settings.nodesSeparator1 === undefined)
             ns.settings.nodesSeparator1 = null
-        
+
         if(ns.settings.mode == 'bipartite' && ns.settings.nodesColumnId2 === undefined)
             console.log('Table2net: nodesColumnId2 required for mode '+ns.settings.mode)
-        
+
         if(ns.settings.nodesSeparator2 === undefined)
             ns.settings.nodesSeparator2 = null
 
         if(ns.settings.mode == 'citation' && ns.settings.citationLinksColumnId === undefined)
             console.log('Table2net: citationLinksColumnId required for mode '+ns.settings.mode)
-        
+
         if(ns.settings.citationLinksSeparator === undefined)
             ns.settings.citationLinksSeparator = null
-        
+
         if(ns.settings.nodesMetadataColumnIds === undefined)
             ns.settings.nodesMetadataColumnIds = []
 
@@ -59,7 +59,7 @@
 
         if(ns.settings.linksMetadataColumnIds === undefined)
             ns.settings.linksMetadataColumnIds = []
-        
+
         if(ns.settings.citationLinksMetadataColumnIds === undefined)
             ns.settings.citationLinksMetadataColumnIds = []
 
@@ -68,7 +68,7 @@
 
         if(ns.settings.timeSeries && ns.settings.timeSeriesColumnId === undefined)
             console.log('Table2net: timeSeriesColumnId required timeSeries enabled')
-        
+
 
 
         // Run
@@ -79,8 +79,8 @@
 
     ns.buildGraph_ = function(){
         var tableHeader = ns.table.shift()
-        
 
+        console.log('inBuildGraph_')
         if(ns.settings.mode == 'normal'){
 
             ns.nodes = ns.getNodes(ns.settings.nodesColumnId, ns.settings.nodesSeparator != null, ns.settings.nodesSeparator)
@@ -97,12 +97,12 @@
 
             ns.nodes = ns.getNodes(ns.settings.nodesColumnId, ns.settings.nodesSeparator != null, ns.settings.nodesSeparator)
             ns.links = ns.getCitationLinks(ns.settings.nodesColumnId, ns.settings.nodesSeparator != null, ns.settings.nodesSeparator, ns.settings.citationLinksColumnId, ns.settings.citationLinksSeparator != null, ns.settings.citationLinksSeparator)
-            
+
         } else if(ns.settings.mode == 'nolink'){
-            
+
             ns.nodes = ns.getNodes(ns.settings.nodesColumnId, ns.settings.nodesSeparator != null, ns.settings.nodesSeparator)
             ns.links = [];
-            
+
         }
 
         if(ns.settings.jsonCallback !== undefined){
@@ -222,8 +222,9 @@
                     nodesId.push(id)
                     return {id:id, label:label, attributes:attributes}
                 })
-            
+
             var edges = ns.links.map(function(d){
+                    // console.log('deydey', d)
                     var sourceId = ns.dehydrate_expression(tableHeader[d.sourceColId])+"_"+$.md5(d.source)
                         ,targetId = ns.dehydrate_expression(tableHeader[d.targetColId])+"_"+$.md5(d.target)
                         ,attributes = [
@@ -243,13 +244,13 @@
                             return {attr: 'attr_'+colId, val:attValues}
                         }))
 
-                    return {sourceID: sourceId, targetID: targetId, attributes: attributes}
+                    return {sourceID: sourceId, targetID: targetId, attributes: attributes, weight: d.weight}
                 })
-            
+
             // In JSON we ensure that the nodes connecting edges actually exist (citation mode)
             if(ns.settings.mode == 'citation'){
                 edges = edges.filter(function(edge){
-                    
+
                     return nodesId.some(function(id){
                         return edge.sourceID == id
                     }) && nodesId.some(function(id){
@@ -268,19 +269,19 @@
                 ,edges: edges
             })
         }
-        
+
         if(ns.settings.gexfCallback !== undefined){
 
               /////////////////////////
              // Let's make the GEXF //
             /////////////////////////
-            
+
             var content = []
-            
+
             content.push('<?xml version="1.0" encoding="UTF-8"?><gexf xmlns="http://www.gexf.net/1.1draft" version="1.1" xmlns:viz="http://www.gexf.net/1.1draft/viz" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.gexf.net/1.1draft http://www.gexf.net/1.1draft/gexf.xsd">')
             content.push("\n" +  '<meta lastmodifieddate="2011-06-15"><creator>Table2Net</creator><description>Jacomy Mathieu, Sciences Po Medialab and WebAtlas</description></meta>')
             content.push("\n" +  '<graph defaultedgetype="'+((ns.settings.mode=="citation")?('directed'):('undirected'))+'" '+((ns.settings.timeSeries)?('timeformat="double"'):(''))+' mode="'+((ns.settings.timeSeries)?('dynamic'):('static'))+'">')
-            
+
             // Nodes Attributes
             content.push("\n" +  '<attributes class="node" mode="'+((ns.settings.timeSeries)?('dynamic'):('static'))+'">')
             content.push("\n" +  '<attribute id="attr_type" title="Type" type="string"></attribute>')
@@ -298,7 +299,7 @@
                 })
             }
             content.push("\n" +  '</attributes>')
-            
+
             // Edges Attributes
             content.push("\n" +  '<attributes class="edge" mode="'+((ns.settings.timeSeries)?('dynamic'):('static'))+'">')
             content.push("\n" +  '<attribute id="attr_type" title="Type" type="string"></attribute>')
@@ -307,16 +308,16 @@
                 content.push("\n" +  '<attribute id="attr_'+colId+'" title="'+ns.xmlEntities(tableHeader[colId])+'" type="string"></attribute>')
             })
             content.push("\n" +  '</attributes>')
-            
+
             // Nodes
             content.push("\n" +  '<nodes>')
             ns.nodes.forEach(function(d){
                 var id = ns.dehydrate_expression(tableHeader[d.colId])+"_"+$.md5(d.node)
                     ,label = d.node
                     ,type = tableHeader[d.colId]
-                
+
                 content.push("\n" +  '<node id="'+id+'" label="'+ns.xmlEntities(label)+'">')
-                
+
                 // Dynamic
                 if(ns.settings.timeSeries){
                     content.push("\n" +  '<spells>')
@@ -333,12 +334,12 @@
                     })
                     content.push("\n" +  '</spells>')
                 }
-                
+
                 // AttributeValues
                 content.push("\n" +  '<attvalues>')
                 content.push("\n" +  '<attvalue for="attr_type" value="'+ns.xmlEntities(type)+'"></attvalue>')
                 content.push("\n" +  '<attvalue for="global_occurrences" value="'+d.tableRows.length+'"></attvalue>')
-                
+
                 if(ns.settings.mode == 'bipartite'){
                     ns.settings.nodesMetadataColumnIds1.forEach(function(colId){
                         if(!ns.settings.timeSeries){
@@ -353,7 +354,7 @@
                                         currentAttValue = attValue
                                         return result
                                     }).join(" | ")
-                                
+
                                 content.push("\n" +  '<attvalue for="attr_1_'+colId+'" value="'+ns.xmlEntities(attValues)+'"></attvalue>');
                             } else {
                                 content.push("\n" +  '<attvalue for="attr_1_'+colId+'" value="n/a"></attvalue>');
@@ -398,7 +399,7 @@
                                         currentAttValue = attValue
                                         return result
                                     }).join(" | ")
-                                
+
                                 content.push("\n" +  '<attvalue for="attr_2_'+colId+'" value="'+ns.xmlEntities(attValues)+'"></attvalue>');
                             } else {
                                 content.push("\n" +  '<attvalue for="attr_2_'+colId+'" value="n/a"></attvalue>');
@@ -443,7 +444,7 @@
                                     currentAttValue = attValue
                                     return result
                                 }).join(" | ")
-                            
+
                             content.push("\n" +  '<attvalue for="attr_'+colId+'" value="'+ns.xmlEntities(attValues)+'"></attvalue>')
                         } else {
                             attValuesPerYear = []
@@ -452,7 +453,7 @@
                                     ,attValuesThisYear = attValuesPerYear[year] || []
                                     ,attValue = ns.table[rowId][colId]
                                 attValuesThisYear.push(attValue)
-                                
+
                                 attValuesPerYear[year] = attValuesThisYear
                             })
                             d3.keys(attValuesPerYear).forEach(function(year){
@@ -469,23 +470,24 @@
                             });
                         }
                     })
-                }   
-                
+                }
+
                 content.push("\n" +  '</attvalues>')
                 content.push("\n" +  '</node>')
-                
+
             })
             content.push("\n" +  '</nodes>')
-            
+
             // Edges
             content.push("\n" +  '<edges>')
             ns.links.forEach(function(d){
+                console.log('dey', d)
                 var sourceId = ns.dehydrate_expression(tableHeader[d.sourceColId])+"_"+$.md5(d.source)
                     ,targetId = ns.dehydrate_expression(tableHeader[d.targetColId])+"_"+$.md5(d.target)
                     ,type = tableHeader[ns.settings.linksColumnId]
-                
-                content.push("\n" +  '<edge source="'+sourceId+'" target="'+targetId+'" '+((ns.settings.weightEdges)?('weight="'+d.tableRows.length+'"'):(''))+'>')
-                
+
+                content.push("\n" +  '<edge source="'+sourceId+'" target="'+targetId+'" '+((ns.settings.weightEdges)?('weight="'+d.weight+'"'):(''))+'>')
+
                 // Dynamic
                 if(ns.settings.timeSeries){
                     content.push("\n" +  '<spells>');
@@ -502,12 +504,12 @@
                     });
                     content.push("\n" +  '</spells>');
                 }
-                
+
                 // AttributeValues
                 content.push("\n" +  '<attvalues>')
                 content.push("\n" +  '<attvalue for="matchings_count" value="'+ns.xmlEntities(d.tableRows.length)+'"></attvalue>');
                 content.push("\n" +  '<attvalue for="attr_type" value="'+ns.xmlEntities(type)+'"></attvalue>');
-                
+
                 ns.settings.linksMetadataColumnIds.forEach(function(colId){
                     if(!ns.settings.timeSeries){
                         var currentAttValue = ""
@@ -520,7 +522,7 @@
                                 currentAttValue = attValue
                                 return result
                             }).join(" | ")
-                        
+
                         content.push("\n" +  '<attvalue for="attr_'+colId+'" value="'+ns.xmlEntities(attValues)+'"></attvalue>')
                     } else {
                         attValuesPerYear = []
@@ -529,7 +531,7 @@
                                 ,attValuesThisYear = attValuesPerYear[year] || []
                                 ,attValue = ns.table[rowId][colId]
                             attValuesThisYear.push(attValue)
-                            
+
                             attValuesPerYear[year] = attValuesThisYear
                         })
                         d3.keys(attValuesPerYear).forEach(function(year){
@@ -552,12 +554,12 @@
             content.push("\n" +  '</edges>')
 
             content.push("\n" +  '</graph></gexf>')
-            
+
             // Finally, download !
             /*
             ns.nodes = []
             ns.links = []
-            
+
             var blob = new Blob(content, {'type':'text/gexf+xml;charset=utf-8'})
                 ,filename = "Network.gexf"
             if(navigator.userAgent.match(/firefox/i))
@@ -577,7 +579,7 @@
     ns.getNodes = function(nodesColumnId, nodesMultiples, nodesSeparator){
         // NODES
         var nodesList = ns.table.map(function(d,i){return {node:d[nodesColumnId], colId:nodesColumnId, tableRows:[i]};});
-        
+
         // Unfold if there are multiples
         if(nodesMultiples){
             var nodesList_temp = nodesList.map(function(d){
@@ -600,7 +602,7 @@
             //console.log('nodesList_new', nodesList_new)
             nodesList = nodesList_new
         }
-        
+
         // Clean
         var temp_nodesList = nodesList
             .map(function(d){
@@ -612,7 +614,7 @@
             .sort(function(a, b) {
                 return a.node < b.node ? -1 : a.node > b.node ? 1 : 0;
             });
-        
+
         // Merge Doubles
         nodesList = [];
         for (var i = 0; i < temp_nodesList.length; i++) {
@@ -622,19 +624,19 @@
                 nodesList[nodesList.length-1].tableRows = nodesList[nodesList.length-1].tableRows.concat(temp_nodesList[i].tableRows);
             }
         }
-        
+
         return nodesList;
     }
 
     ns.getMonopartiteLinks = function(nodesColumnId, nodesMultiples, nodesSeparator, linksColumnId, linksMultiples, linksSeparator){
         // To build our graph, we will first build a bipartite graph and the transform it to a monopartite graph.
         // In this case, the nodes of the bipartite graph that will be transformed in links are called "GhostNodes".
-        
+
         var ghostNodesList = ns.table.map(function(d,i){
             // Here we want to keep tracking the links.
             // So we return objects that contain the ghostNode and the list of linked nodes.
             // There is only one linked node if there are no multiples for nodes, of course...
-            
+
             // Linked nodes
             var linkedNodesList;
             if(!nodesMultiples){
@@ -654,7 +656,7 @@
             }
             return {ghostNode:d[linksColumnId], linkedNodes:linkedNodesList, tableRows:[i]};
         });
-        
+
         // Unfold if there are multiples
         if(linksMultiples){
             ghostNodesList = d3.merge(
@@ -679,7 +681,7 @@
             .sort(function(a, b) {
                 return a.ghostNode < b.ghostNode ? -1 : a.ghostNode > b.ghostNode ? 1 : 0;
             });
-        
+
         // Merge Doubles
         ghostNodesList = [];
         for(var i=0; i<temp_ghostNodesList.length; i++) {
@@ -689,7 +691,7 @@
             } else {
                 // The element is the same. Then we have to merge: add the new linked nodes.
                 currentLinkedNodesList = ghostNodesList[ghostNodesList.length-1].linkedNodes;
-                
+
                 temp_ghostNodesList[i].linkedNodes.forEach(function(d){
                     if(!currentLinkedNodesList.some(function(dd){
                         return dd == d;
@@ -699,11 +701,11 @@
                         currentLinkedNodesList.push(d);
                     }
                 });
-                
+
                 ghostNodesList[ghostNodesList.length-1].linkedNodes = currentLinkedNodesList;
             }
         }
-        
+
         // Now we have to build the actual monopartite links.
         // Each ghostNode links all the nodes linked to it. First we add all these links and then we remove doublons.
         links = d3.merge(
@@ -723,7 +725,7 @@
                 return localLinks;
             })
         );
-        
+
         // Remove doublons
         temp_links = links.sort(function(a, b) {
             return a.source+a.target < b.source+b.target ? -1 : a.source+a.target > b.source+b.target ? 1 : 0;
@@ -741,6 +743,7 @@
     }
 
     ns.getBipartiteLinks = function(nodesColumnId_1, nodesMultiples_1, nodesSeparator_1, nodesColumnId_2, nodesMultiples_2, nodesSeparator_2){
+        console.log('in getBipartiteLinks')
         var secondaryNodesList = ns.table.map(function(d,i){
             // Here we want to keep tracking the links.
             // So we return objects that contain the secondaryNode and the list of linked nodes.
@@ -761,9 +764,9 @@
                 });
             }
             secondaryNode = d[nodesColumnId_2] || "";
-            return {secondaryNode:secondaryNode, linkedNodes:linkedNodesList, tableRows:[i]};
+            return {secondaryNode:secondaryNode, linkedNodes:linkedNodesList, tableRows:[i], weight: ns.table[i][ns.table[i].length -1]};
         });
-        
+
         // Unfold if there are multiples
         if(nodesMultiples_2){
             secondaryNodesList = d3.merge(
@@ -771,16 +774,16 @@
                     subsecondaryNodes = d.secondaryNode.split(nodesSeparator_2);
                     return subsecondaryNodes.map(function(dd){
                         // NB: array.slice(0) is just cloning the array. This is necessary here.
-                        return {secondaryNode:dd, linkedNodes:d.linkedNodes.slice(0), tableRows:d.tableRows.slice(0)};
+                        return {secondaryNode:dd, linkedNodes:d.linkedNodes.slice(0), tableRows:d.tableRows.slice(0), weight: d.weight};
                     });
                 })
             );
         }
-        
+
         // Clean
         var temp_secondaryNodesList = secondaryNodesList
             .map(function(d){
-                return {secondaryNode:ns.clean_expression(d.secondaryNode), linkedNodes:d.linkedNodes, tableRows:d.tableRows};
+                return {secondaryNode:ns.clean_expression(d.secondaryNode), linkedNodes:d.linkedNodes, tableRows:d.tableRows, weight: d.weight};
             })
             .filter(function(d){
                 return d.secondaryNode != "";
@@ -788,7 +791,7 @@
             .sort(function(a, b) {
                 return a.secondaryNode < b.secondaryNode ? -1 : a.secondaryNode > b.secondaryNode ? 1 : 0;
             });
-        
+
         // Merge Doubles
         secondaryNodesList = temp_secondaryNodesList
         /*secondaryNodesList = [];
@@ -800,7 +803,7 @@
                 // The element is the same. Then we have to merge: add the new linked nodes.
                 var currentLinkedNodesList = secondaryNodesList[secondaryNodesList.length-1].linkedNodes;
                 var currentTableRows = secondaryNodesList[secondaryNodesList.length-1].tableRows;
-                
+
                 temp_secondaryNodesList[i].linkedNodes.forEach(function(candidate_linked_node){
                     if(currentLinkedNodesList.every(function(linked_node){
                         return linked_node != candidate_linked_node;
@@ -810,7 +813,7 @@
                         currentLinkedNodesList.push(candidate_linked_node);
                     }
                 });
-                
+
                 temp_secondaryNodesList[i].tableRows.forEach(function(candidate_table_row){
                     if(currentTableRows.every(function(table_row){
                         return table_row != candidate_table_row;
@@ -822,16 +825,16 @@
                 });
             }
         }*/
-        
+
         // console.log(secondaryNodesList.filter(function(d,i){return i<10;}));
-        
+
         // Now we can build the bipartite graph of nodes and secondaryNodes linked.
         var links = d3.merge(secondaryNodesList.map(function(d){
             return d.linkedNodes.map(function(dd){
-                return {source:dd, target:d.secondaryNode, sourceColId:nodesColumnId_1, targetColId:nodesColumnId_2, tableRows:d.tableRows};
+                return {source:dd, target:d.secondaryNode, sourceColId:nodesColumnId_1, targetColId:nodesColumnId_2, tableRows:d.tableRows, weight: d.weight};
             });
         }));
-        
+
         // Remove doublons
         temp_links = links.sort(function(a, b) {
             return a.source+a.target < b.source+b.target ? -1 : a.source+a.target > b.source+b.target ? 1 : 0;
@@ -845,7 +848,7 @@
                 links[links.length-1].tableRows = links[links.length-1].tableRows.concat(temp_links[i].tableRows);
             }
         }
-        
+
         return links;
     }
 
@@ -853,7 +856,7 @@
         // localLinks.push({source:node1, target:node2, sourceColId:nodesColumnId, targetColId:nodesColumnId, tableRows:d.tableRows});
 
         var linksList = ns.table.map(function(d,i){return {source:d[nodesColumnId], sourceColId:nodesColumnId, target:d[linksColumnId], targetColId:nodesColumnId, tableRows:[i]};});
-        
+
         // Unfold by Source if there are multiples
         if(nodesMultiples){
             linksList = d3.merge(
@@ -870,7 +873,7 @@
                 })
             );
         }
-        
+
         // Unfold by Target if there are multiples
         if(linksMultiples){
             linksList = d3.merge(
@@ -887,7 +890,7 @@
                 })
             );
         }
-        
+
         // Clean
         var temp_linksList = linksList
             .map(function(link){
@@ -901,7 +904,7 @@
                 var B = b.source+"  "+b.target;
                 return A < B ? -1 : A > B ? 1 : 0;
             });
-        
+
         // Merge Doubles
         linksList = [];
         for (var i = 0; i < temp_linksList.length; i++) {
@@ -911,7 +914,7 @@
                 linksList[linksList.length-1].tableRows = linksList[linksList.length-1].tableRows.concat(temp_linksList[i].tableRows);
             }
         }
-        
+
         return linksList;
     }
 

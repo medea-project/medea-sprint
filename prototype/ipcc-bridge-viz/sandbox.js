@@ -1,9 +1,16 @@
 ;(function(ns, $, undefined){
   'use strict';
-  
+
   ns.sourceFile = 'bridge_authors_by_ar_wg_chapter.csv'
   ns.structure = {1:{}, 2:{}, 3:{}, 4:{}, 5:{}} // ARs
   ns.wgSizes = {}
+
+  var roleWeight = {
+    'CLA': 4,
+    'LA': 3,
+    'RE': 3,
+    'CA': 2
+  }
 
   ns.run = function(){
     ns.loadFile(
@@ -34,7 +41,7 @@
 
     // Start processing
     ns.processAR(1)
-    
+
   }
 
   ns.processAR = function(ar){
@@ -46,11 +53,15 @@
       })
     // Build a table with minimal columns
     .map(function(obj){
-        return [obj['Bridge Author'], obj['WG'] + ' - ' + obj['Chapter #'] + ' - ' + obj['AR'], obj['WG']]
+        return [obj['Bridge Author'],
+        obj['WG'] + ' - ' + obj['Chapter #'] + ' - ' + obj['AR'],
+        obj['WG'],
+        roleWeight[obj['Role']]
+        ];
       })
 
     // Table headline
-    table.unshift(['Author', 'Chapter', 'WG'])
+    table.unshift(['Author', 'Chapter', 'WG', 'RoleCoef'])
 
     // Build the network
     var settings = {
@@ -59,17 +70,17 @@
       ,nodesMetadataColumnIds1: [2]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: []
+      ,weightEdges: true
       ,jsonCallback: function(json){
-        
+
         // Build indexes
         json_graph_api.buildIndexes(json)
 
         json = ns.filterByMultipleWG(json)
 
         ns.setCoordinates(json, [ar])
-
         ns.makeUp(json)
-        
+
         console.log('AR '+ar, json)
 
         // Download
@@ -100,11 +111,12 @@
           ,obj['WG']
           ,obj['AR']
           ,obj['WG'] + ' / AR '+obj['AR']
+          ,roleWeight[obj['Role']]
         ]
       })
 
     // Table headline
-    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR'])
+    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR', 'RoleCoef'])
 
     // Build the network
     var settings = {
@@ -113,8 +125,9 @@
       ,nodesMetadataColumnIds1: [4]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: [2, 3]
+      ,weightEdges: true
       ,jsonCallback: function(json){
-        
+        console.log('IntraAR json before', json)
         // Build indexes
         json_graph_api.buildIndexes(json)
 
@@ -123,7 +136,7 @@
         ns.setCoordinates(json, [1, 2, 3, 4, 5])
 
         ns.makeUp(json)
-
+        console.log('IntraAR json after', json)
         // Download
         var blob = new Blob(json_graph_api.buildGEXF(json), {'type':'text/gexf+xml;charset=utf-8'})
         ,filename = "Bridges Intra AR.gexf"
@@ -148,11 +161,12 @@
           ,obj['WG']
           ,obj['AR']
           ,obj['WG'] + ' / AR '+obj['AR']
+          ,roleWeight[obj['Role']]
         ]
       })
 
     // Table headline
-    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR'])
+    table.unshift(['Author', 'Chapter', 'WG', 'AR', 'WGxAR', 'RoleCoef'])
 
     // Build the network
     var settings = {
@@ -161,8 +175,9 @@
       ,nodesMetadataColumnIds1: [4]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: [2, 3]
+      ,weightEdges: true
       ,jsonCallback: function(json){
-        
+        console.log('InterAR json before', json)
         // Build indexes
         json_graph_api.buildIndexes(json)
 
@@ -171,6 +186,7 @@
         ns.setCoordinates(json, [1, 2, 3, 4, 5])
 
         ns.makeUp(json)
+        console.log('InterAR json after', json)
 
         // Download
         var blob = new Blob(json_graph_api.buildGEXF(json), {'type':'text/gexf+xml;charset=utf-8'})
@@ -180,12 +196,13 @@
 
       }
     }
+    console.log('tabletable', table);
     table2net.buildGraph(table, settings)
 
   }
 
   ns.filterInterARBridges = function(g){
-    
+
     var nodesToRemove = g.nodes.filter(function(n){
       return n.attributes_byId.attr_type == 'Author'
     }).filter(function(n){
@@ -195,7 +212,7 @@
         var dsplit = d.split(' / ')
         ,wg = dsplit[0]
         ,ar = dsplit[1]
-        
+
         return WGxAR.some(function(d2, j){
           if(j <= i)
             return false
