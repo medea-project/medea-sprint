@@ -1,6 +1,5 @@
 id,code,name
 1,N/A,N/A
-2,ALB,Albania
 3,DZA,Algeria
 4,ATG,Antigua and Barbuda
 5,ARG,Argentina
@@ -29,7 +28,6 @@ id,code,name
 28,DNK,Denmark
 29,ECU,Ecuador
 30,EGY,Egypt
-31,SLV,El Salvador
 32,ETH,Ethiopia
 33,FJI,Fiji
 34,FIN,Finland
@@ -38,7 +36,6 @@ id,code,name
 37,GHA,Ghana
 38,GRC,Greece
 39,GTM,Guatemala
-40,GIN,Guinea
 41,HKG,Hong Kong
 42,HUN,Hungary
 43,ISL,Iceland
@@ -52,7 +49,6 @@ id,code,name
 51,JPN,Japan
 52,KAZ,Kazakhstan
 53,KEN,Kenya
-54,KIR,Kiribati
 55,KWT,Kuwait
 56,LAO,Laos
 57,LTU,Lithuania
@@ -65,7 +61,6 @@ id,code,name
 64,MEX,Mexico
 65,MDA,Moldova
 66,MCO,Monaco
-67,MNE,Montenegro
 68,MNG,Mongolia
 69,MAR,Morocco
 70,MOZ,Mozambique
@@ -98,7 +93,6 @@ id,code,name
 97,ESP,Spain
 98,LKA,Sri Lanka
 99,SDN,Sudan
-100,SWZ,Swaziland
 101,SWE,Sweden
 102,CHE,Switzerland
 103,TWN,Taiwan
@@ -106,7 +100,6 @@ id,code,name
 105,THA,Thailand
 106,GMB,The Gambia
 107,NLD,Netherlands
-108,TGO,Togo
 109,TTO,Trinidad and Tobago
 110,TUN,Tunisia
 111,TUR,Turkey
@@ -122,3 +115,5 @@ id,code,name
 121,VNM,Vietnam
 122,ZMB,Zambia
 123,ZWE,Zimbabwe
+124,BHS,Bahamas
+127,MLI,Mali
