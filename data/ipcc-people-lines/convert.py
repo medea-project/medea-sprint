@@ -4,10 +4,10 @@ import os, csv, json
 
 countries = {}
 roles = {
-  "CLA": "Coordinating Lead Author",
-  "LA":  "Lead Author",
-  "RE":  "Review Editor",
-  "CA":  "Contributing Author"
+  "CLA": "CLA",
+  "LA":  "LA",
+  "RE":  "RE",
+  "CA":  "CA"
 }
 
 chapter_id = lambda l: "%s-%s-%s" % (l["ar"], l["wg"], l.get("chapter", l.get("number", None)))
