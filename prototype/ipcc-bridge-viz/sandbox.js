@@ -122,7 +122,7 @@
     var settings = {
       mode: 'bipartite'
       ,nodesColumnId1: 0
-      ,nodesMetadataColumnIds1: [4]
+      ,nodesMetadataColumnIds1: [2, 4]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: [2, 3]
       ,weightEdges: true
@@ -172,7 +172,7 @@
     var settings = {
       mode: 'bipartite'
       ,nodesColumnId1: 0
-      ,nodesMetadataColumnIds1: [4]
+      ,nodesMetadataColumnIds1: [2, 4]
       ,nodesColumnId2: 1
       ,nodesMetadataColumnIds2: [2, 3]
       ,weightEdges: true
